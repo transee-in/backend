@@ -1,0 +1,11 @@
+{application, transee,
+  [ {description, "transee backend"}
+  , {vsn, git}
+  , {registered, []}
+  , {applications,
+    [ kernel, stdlib, std
+    , inets, lager, cowboy
+    ]}
+  , {mod, {transee_app, []}}
+  , {env, []}
+  ]}.
