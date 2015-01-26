@@ -5,8 +5,9 @@
 init(Req, State) ->
     City   = city_to_module(cowboy_req:binding(city, Req)),
     Method = cowboy_req:binding(method, Req),
+    Params = qsp:decode(cowboy_req:qs(Req)),
 
-    {Status, Data} = handle(City, Method),
+    {Status, Data} = handle(City, Method, Params),
     
     Body  = jsx:encode(Data),
     Reply = cowboy_req:reply(Status, [?json_reponse], Body, Req),
@@ -17,17 +18,21 @@ init(Req, State) ->
 %% Handlers
 %%
 
-handle(undefined, _) ->
+handle(undefined, _, _) ->
     {404, json_error(<<"city_not_found">>)};
-handle(City, undefined) ->
+handle(City, undefined, _) ->
     {200, transee_worker:transports(City)};
-handle(City, <<"positions">>) ->
+handle(City, <<"positions">>, #{<<"type">> := T, <<"numbers">> := N}) when is_list(N) ->
+    {200, transee_worker:positions(City, T, N)};
+handle(City, <<"positions">>, #{<<"type">> := T}) ->
+    {200, transee_worker:positions(City, T)};
+handle(City, <<"positions">>, _) ->
     {200, transee_worker:positions(City)};
-handle(City, <<"routes">>) ->
+handle(City, <<"routes">>, _) ->
     {200, transee_worker:routes(City)};
-handle(City, <<"stations">>) ->
+handle(City, <<"stations">>, _) ->
     {200, transee_worker:stations(City)};
-handle(_City, _Method) ->
+handle(_City, _Method, _) ->
     {404, json_error(<<"method_not_found">>)}.
 
 %%
