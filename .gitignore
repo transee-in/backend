@@ -1,4 +1,5 @@
 .eunit
+_rel
 deps
 log
 *.o

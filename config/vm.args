@@ -1,8 +1,8 @@
 ## Name of the node
--name transee@127.0.0.1
+-name transee@transee.in
 
 ## Cookie for distributed erlang
-##-setcookie transee
+-setcookie haha
 
 ## Heartbeat management; auto-restarts VM if it dies or becomes unresponsive
 ## (Disabled by default..use with caution!)
