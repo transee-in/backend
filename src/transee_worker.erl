@@ -81,7 +81,7 @@ handle_info(reload, #worker_state{city = City, transports = T} = State) ->
 handle_info(Info, State) ->
     {reply, Info, State}.
 
-terminate(Reason, State) ->
+terminate(_Reason, _State) ->
     ok.
 
 code_change(_OldVsn, State, _Extra) ->

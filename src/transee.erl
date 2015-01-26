@@ -3,7 +3,6 @@
         , stop/0
         % helpers
         , config/1, config/2
-        , priv_dir/1
         ]).
 
 
@@ -25,7 +24,3 @@ config(Key, Default) ->
         undefined   -> Default;
         {ok, Value} -> Value
     end.
-
-priv_dir(App) ->
-   Ebin = filename:dirname(code:which(App)),
-   filename:join(filename:dirname(Ebin), "priv").

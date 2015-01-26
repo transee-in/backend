@@ -10,4 +10,4 @@ qs_numbers(Numbers) ->
     end, Numbers), ",").
 
 extract_transport_ids(Numbers) ->
-    lists:map(fun({ID, Number}) -> ID end, Numbers).
+    lists:map(fun({ID, _Number}) -> ID end, Numbers).

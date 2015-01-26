@@ -13,14 +13,14 @@ positions(Transports) ->
             {error, _} ->
                 [];
             {ok, Positions} ->
-                lists:map(fun([_, Lon, Lat, Angle, ID, Title | _]) ->
+                lists:map(fun([_, Lon, Lat, Angle, ID, _Title | _]) ->
                     {ID, [Lat, Lon, Angle]}
                 end, Positions)
         end}
     end, Transports),
-    lists:map(fun({{RouteName, RouteID}, Numbers}) ->
+    lists:map(fun({{RouteName, _RouteID}, Numbers}) ->
         Types = proplists:get_value(RouteName, Positions),
-        {RouteName, lists:map(fun({ID, Number}) ->
+        {RouteName, lists:map(fun({ID, _Number}) ->
             BinaryID = list_to_binary(ID),
             ClearPositions = case proplists:lookup_all(BinaryID, Types) of
                 [] -> [];
@@ -35,7 +35,7 @@ positions(Transports) ->
 
 routes(Transports) ->
     lists:map(fun({{RouteName, RouteID}, Numbers}) ->
-        {RouteName, lists:map(fun({ID, Number}) ->
+        {RouteName, lists:map(fun({ID, _Number}) ->
             {ID, case request_route(RouteID, ID) of
                 {error, _} ->
                     [];
