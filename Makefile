@@ -9,6 +9,11 @@ env   := development
 
 all: compile test
 
+deploy-node: get-deps compile release restart-release
+
+deploy:
+	@ssh transee 'cd ~/apps/transee && git pull && make deploy-node'
+
 clean:
 	@$(REBAR) clean skip_deps=true
 
