@@ -1,0 +1,12 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+svg {
+  width: 256px;
+  height: 256px;
+  position: absolute;
+  top: 50%; left: 50%;
+  margin: -128px 0 0 -128px;
+}
