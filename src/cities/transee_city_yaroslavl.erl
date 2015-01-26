@@ -1,11 +1,19 @@
 -module(transee_city_yaroslavl).
--export([positions/1, routes/1, stations/1]).
+-include_lib("std/include/std.hrl").
+-export([transports/1, positions/1, routes/1, stations/1]).
 
 %%
 %% Behavior
 %%
 
-positions(Transports) ->
+transports(Source) ->
+    lists:map(fun({{RouteName, _RouteID}, Numbers}) ->
+        {RouteName, lists:map(fun({ID, Number}) ->
+            {?l2b(ID), Number}
+        end, Numbers)}
+    end, Source).
+
+positions(Source) ->
     Positions = lists:map(fun({{RouteName, RouteID}, Numbers}) ->
         Response = request_positions(RouteID,
             transee_util:extract_transport_ids(Numbers)),
@@ -17,37 +25,43 @@ positions(Transports) ->
                     {ID, [Lat, Lon, Angle]}
                 end, Positions)
         end}
-    end, Transports),
+    end, Source),
     lists:map(fun({{RouteName, _RouteID}, Numbers}) ->
         Types = proplists:get_value(RouteName, Positions),
         {RouteName, lists:map(fun({ID, _Number}) ->
-            BinaryID = list_to_binary(ID),
+            BinaryID = ?l2b(ID),
             ClearPositions = case proplists:lookup_all(BinaryID, Types) of
                 [] -> [];
                 Values ->
                     lists:map(fun({_, [Lat, Lon, Angle | _]}) ->
-                        [Lat, Lon, Angle]
+                        [ std_cast:to_number(Lat)
+                        , std_cast:to_number(Lon)
+                        , std_cast:to_number(Angle)
+                        ]
                     end, Values)
             end,
             {BinaryID, ClearPositions}
         end, Numbers)}
-    end, Transports).
+    end, Source).
 
-routes(Transports) ->
+routes(Source) ->
     lists:map(fun({{RouteName, RouteID}, Numbers}) ->
         {RouteName, lists:map(fun({ID, _Number}) ->
-            {ID, case request_route(RouteID, ID) of
+            BinaryID = ?l2b(ID),
+            {BinaryID, case request_route(RouteID, ID) of
                 {error, _} ->
                     [];
                 {ok, Routes} ->
                     lists:map(fun([Lat, Lon | _]) ->
-                        {Lat, Lon}
+                        [ std_cast:to_number(Lat)
+                        , std_cast:to_number(Lon)
+                        ]
                     end, Routes)
             end}
         end, Numbers)}
-    end, Transports).
+    end, Source).
 
-stations(Transports) ->
+stations(Source) ->
     lists:map(fun({{RouteName, RouteID}, Numbers}) ->
         Response = request_stations(RouteID,
             transee_util:extract_transport_ids(Numbers)),
@@ -56,10 +70,12 @@ stations(Transports) ->
                 [];
             {ok, Stations} ->
                 lists:map(fun([_, Lat, Lon | _]) ->
-                    {Lat, Lon}
+                    [ std_cast:to_number(Lat)
+                    , std_cast:to_number(Lon)
+                    ]
                 end, Stations)
         end}
-    end, Transports).
+    end, Source).
 
 %%
 %% Helpers
@@ -68,21 +84,18 @@ stations(Transports) ->
 request_positions(ID, Numbers) ->
     URL = create_url("http://www.ot76.ru/getpe.php?vt=~s&r=[~s]",
         [ID, numbers_for_url(Numbers)]),
-    io:format("~s~n", [URL]),
     {ok, Body} = submit_request(URL),
     parse_json(Body).
 
 request_route(ID, Number) ->
     URL = create_url("http://www.ot76.ru/getroute.php?vt=~s&r=~s",
         [ID, Number]),
-    io:format("~s~n", [URL]),
     {ok, Body} = submit_request(URL),
     parse_json(Body).
 
 request_stations(ID, Numbers) ->
     URL = create_url("http://www.ot76.ru/getstations.php?vt=~s&r=[~s]",
         [ID, numbers_for_url(Numbers)]),
-    io:format("~s~n", [URL]),
     {ok, Body} = submit_request(URL),
     parse_json(Body).
 

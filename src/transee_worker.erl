@@ -52,9 +52,6 @@ handle_call(transports, _From, #worker_state{transports = Transports} = State) -
 handle_call(positions, _From, #worker_state{positions = Positions} = State) ->
     {reply, Positions, State};
 handle_call({positions, Type}, _From, #worker_state{positions = Positions} = State) ->
-    % lists:map(fun(ID) ->
-    %     proplists:lookup_all(ID, Positions),
-    % end, IDs),
     {reply, proplists:get_value(Type, Positions, []), State};
 handle_call(routes, _From, #worker_state{routes = Routes} = State) ->
     {reply, Routes, State};
@@ -67,16 +64,18 @@ handle_cast(_Req, State) ->
     {noreply, State}.
 
 handle_info(init, #worker_state{city = City} = State) ->
-    Transports = open_transports(City),
-    Positions  = City:positions(Transports),
-    Stations   = City:stations(Transports),
-    Routes     = City:routes(Transports),
+    Source     = open_source(City),
+    Transports = City:transports(Source),
+    Positions  = City:positions(Source),
+    Stations   = City:stations(Source),
+    Routes     = City:routes(Source),
     {noreply, State#worker_state{
         positions = Positions, stations = Stations,
-        routes = Routes, transports = Transports}};
-handle_info(reload, #worker_state{city = City, transports = T} = State) ->
+        routes = Routes, source = Source,
+        transports = Transports}};
+handle_info(reload, #worker_state{city = City, source = S} = State) ->
     reload_data_timer(),
-    Positions = City:positions(T),
+    Positions = City:positions(S),
     {noreply, State#worker_state{positions = Positions}};
 handle_info(Info, State) ->
     {reply, Info, State}.
@@ -97,7 +96,7 @@ init_data_timer() ->
 reload_data_timer() ->
     erlang:send_after(?RELOAD_CITY_INTERVAL, self(), reload).
 
-open_transports(City) ->
+open_source(City) ->
     File = atom_to_list(City) ++ ".config",
     Path = filename:join([std:priv_dir(transee), "cities", File]),
     case file:consult(Path) of
