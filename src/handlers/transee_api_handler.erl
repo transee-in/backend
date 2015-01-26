@@ -5,7 +5,10 @@
 init(Req, State) ->
     City   = city_to_module(cowboy_req:binding(city, Req)),
     Method = cowboy_req:binding(method, Req),
-    Params = qsp:decode(cowboy_req:qs(Req)),
+    Params = case cowboy_req:qs(Req) of
+        <<>> -> undefined;
+        Val  -> qsp:decode(Val)
+    end,
 
     {Status, Data} = handle(City, Method, Params),
     
