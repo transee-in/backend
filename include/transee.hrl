@@ -5,7 +5,7 @@
 -define(INIT_CITY_INTERVAL,   1000). % 1 second
 -define(RELOAD_CITY_INTERVAL, 30000). % 30 seconds
 
--define(json_reponse, {<<"content-type">>, <<"application/json">>}).
+-define(json_reponse, {<<"content-type">>, <<"application/json; charset=utf-8">>}).
 
 -type lat()
    :: binary().
