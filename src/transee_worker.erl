@@ -25,16 +25,16 @@ positions(City) ->
     gen_server:call(City, positions).
 
 positions(City, Type) ->
-    gen_server:call(City, {positions, Type}).
+    [{Type, gen_server:call(City, {positions, Type})}].
 
 positions(City, Type, IDs) ->
-    Types = positions(City, Type),
-    lists:foldl(fun(ID, Acc) ->
+    Types = gen_server:call(City, {positions, Type}),
+    [{Type, lists:foldl(fun(ID, Acc) ->
         case proplists:get_value(ID, Types) of
             undefined -> Acc;
             Value     -> [{ID, Value} | Acc]
         end
-    end, [], IDs).
+    end, [], IDs)}].
 
 routes(City) ->
     gen_server:call(City, routes).
