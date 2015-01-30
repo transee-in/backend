@@ -16,8 +16,9 @@ stop(_State) ->
     ok.
 
 routes() -> cowboy_router:compile([{'_',
-    [ {"/",                    transee_index_handler, []}
-    , {"/api/:city/[:method]", transee_api_handler,   []}
+    [ {"/",                    transee_index_handler,      []}
+    , {"/api/cities",          transee_api_cities_handler, []}
+    , {"/api/:city/[:method]", transee_api_city_handler,   []}
     , {"/static/[...]",        cowboy_static, {dir, static_dir()}}
     ]}]).
 
