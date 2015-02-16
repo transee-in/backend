@@ -28,15 +28,19 @@ handle(City, undefined, _) ->
 handle(City, <<"positions">>, #{<<"type">> := T, <<"numbers">> := N}) when is_list(T), is_map(N) ->
     Result = lists:foldl(fun(Type, Acc) ->
         case maps:get(Type, N, undefined) of
-            undefined -> Acc;
-            Numbers   -> [transee_worker:positions(City, Type, Numbers)|Acc]
+            undefined ->
+                Acc;
+            Numbers ->
+                [Positions|_] = transee_worker:positions(City, Type, Numbers),
+                [Positions|Acc]
         end
     end, [], T),
     {200, Result};
 handle(City, <<"positions">>, #{<<"type">> := T}) when is_list(T) ->
-    Result = lists:map(fun(Type) ->
-        transee_worker:positions(City, Type)
-    end, T),
+    Result = lists:foldl(fun(Type, Acc) ->
+        [Positions|_] = transee_worker:positions(City, Type),
+        [Positions|Acc]
+    end, [], T),
     {200, Result};
 handle(City, <<"positions">>, #{<<"type">> := T, <<"numbers">> := N}) when is_list(N) ->
     {200, transee_worker:positions(City, T, N)};
