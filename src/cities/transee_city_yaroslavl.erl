@@ -1,6 +1,7 @@
 -module(transee_city_yaroslavl).
--include_lib("std/include/std.hrl").
--export([transports/1, positions/1, routes/1, stations/1]).
+-include("transee.hrl").
+-export([transports/1, positions/1, routes/1, stations/1, transport_info/2]).
+-define(to_num(N), (std_cast:to_number(N))).
 
 %%
 %% Behavior
@@ -21,27 +22,29 @@ positions(Source) ->
             {error, _} ->
                 [];
             {ok, Positions} ->
-                lists:map(fun([_, Lon, Lat, Angle, ID, _Title | _]) ->
-                    {ID, [Lat, Lon, Angle]}
+                lists:map(fun([GosID, Lon, Lat, Angle, ID, _Title, _Image | _]) ->
+                    {ID, [ {<<"gos_id">>, GosID}
+                         , {<<"position">>, [?to_num(Lat), ?to_num(Lon), ?to_num(Angle)]}
+                         ]}
                 end, Positions)
         end}
     end, Source),
     lists:map(fun({{RouteName, _RouteID}, Numbers}) ->
         Types = proplists:get_value(RouteName, Positions),
-        {RouteName, lists:map(fun({ID, _Number}) ->
+        Items = lists:map(fun({ID, Number}) ->
             BinaryID = ?l2b(ID),
             ClearPositions = case proplists:lookup_all(BinaryID, Types) of
                 [] -> [];
-                Values ->
-                    lists:map(fun({_, [Lat, Lon, Angle | _]}) ->
-                        [ std_cast:to_number(Lat)
-                        , std_cast:to_number(Lon)
-                        , std_cast:to_number(Angle)
-                        ]
-                    end, Values)
+                Values -> lists:map(fun({_, V}) -> V end, Values)
             end,
-            {BinaryID, ClearPositions}
-        end, Numbers)}
+            [ {<<"id">>, BinaryID}
+            , {<<"name">>, Number}
+            , {<<"items">>, ClearPositions}
+            ]
+        end, Numbers),
+        [ {<<"type">>, RouteName}
+        , {<<"items">>, Items}
+        ]
     end, Source).
 
 routes(Source) ->
@@ -53,9 +56,7 @@ routes(Source) ->
                     [];
                 {ok, Routes} ->
                     lists:map(fun([Lat, Lon | _]) ->
-                        [ std_cast:to_number(Lat)
-                        , std_cast:to_number(Lon)
-                        ]
+                        [?to_num(Lat), ?to_num(Lon)]
                     end, Routes)
             end}
         end, Numbers)}
@@ -70,12 +71,32 @@ stations(Source) ->
                 [];
             {ok, Stations} ->
                 lists:map(fun([_, Lat, Lon | _]) ->
-                    [ std_cast:to_number(Lat)
-                    , std_cast:to_number(Lon)
-                    ]
+                    [?to_num(Lat), ?to_num(Lon)]
                 end, Stations)
         end}
     end, Source).
+
+transport_info(ID, GosID) ->
+    HTML = request_info(type_id(ID), GosID),
+    Path = "//table/tr",
+    Tree = mochiweb_html:parse(HTML),
+    lists:foldl(fun parse_transport_info/2, [],
+        mochiweb_xpath:execute(Path, Tree)).
+
+parse_transport_info({<<"tr">>, [], Content}, Acc) ->
+    case match_content(Content) of
+        {ok, Station, Time} ->
+            [[{<<"station">>, Station}, {<<"time">>, Time}] | Acc];
+        undefined ->
+            Acc
+    end;
+parse_transport_info(_, Acc) ->
+    Acc.
+
+match_content([{<<"td">>, [], [Station|_]}, {<<"td">>, [{<<"align">>,<<"right">>}], [Time|_]}]) ->
+    {ok, win1251_to_utf8(Station), Time};
+match_content(_) ->
+    undefined.
 
 %%
 %% Helpers
@@ -99,9 +120,22 @@ request_stations(ID, Numbers) ->
     {ok, Body} = submit_request(URL),
     parse_json(Body).
 
+request_info(ID, GosID) ->
+    URL = create_url("http://www.ot76.ru/mob/getpeinfo.php?vt=~s&npe=~s",
+        [ID, GosID]),
+    {ok, Body} = submit_request(URL), Body.
+
 %%
 %% Internal
 %%
+
+type_id(<<"autobus">>) -> <<"1">>;
+type_id(<<"trolleybus">>) -> <<"2">>;
+type_id(<<"tram">>) -> <<"3">>;
+type_id(_) -> undefined.
+
+win1251_to_utf8(V) ->
+    win1251:decode(unicode:characters_to_list(V, latin1)).
 
 numbers_for_url(Numbers) ->
     transee_util:qs_numbers(Numbers).
@@ -121,4 +155,3 @@ parse_json(Body) ->
     catch
         _Any:_Error -> {error, Body}
     end.
-

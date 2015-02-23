@@ -6,7 +6,7 @@ init(Req, State) ->
     City   = city_to_module(cowboy_req:binding(city, Req)),
     Method = cowboy_req:binding(method, Req),
     Params = case params(Req) of
-        undefined -> undefined;
+        undefined -> no_args;
         Val       -> qsp:decode(Val)
     end,
 
@@ -28,30 +28,21 @@ handle(City, undefined, _) ->
 handle(City, <<"positions">>, #{<<"type">> := T, <<"numbers">> := N}) when is_list(T), is_map(N) ->
     Result = lists:foldl(fun(Type, Acc) ->
         case maps:get(Type, N, undefined) of
-            undefined ->
-                Acc;
-            Numbers ->
-                [Positions|_] = transee_worker:positions(City, Type, Numbers),
-                [Positions|Acc]
+            undefined -> Acc;
+            Numbers   -> [transee_worker:positions(City, Type, Numbers)|Acc]
         end
     end, [], T),
     {200, Result};
-handle(City, <<"positions">>, #{<<"type">> := T}) when is_list(T) ->
-    Result = lists:foldl(fun(Type, Acc) ->
-        [Positions|_] = transee_worker:positions(City, Type),
-        [Positions|Acc]
-    end, [], T),
-    {200, Result};
-handle(City, <<"positions">>, #{<<"type">> := T, <<"numbers">> := N}) when is_list(N) ->
-    {200, transee_worker:positions(City, T, N)};
-handle(City, <<"positions">>, #{<<"type">> := T}) ->
-    {200, transee_worker:positions(City, T)};
-handle(City, <<"positions">>, _) ->
+handle(City, <<"positions">>, no_args) ->
     {200, transee_worker:positions(City)};
+handle(City, <<"positions">>, _) ->
+    {404, json_error(<<"badly_formed_filter">>)};
 handle(City, <<"routes">>, _) ->
     {200, transee_worker:routes(City)};
 handle(City, <<"stations">>, _) ->
     {200, transee_worker:stations(City)};
+handle(City, <<"transport">>, #{<<"type">> := T, <<"gos_id">> := GosID}) ->
+    {200, transee_worker:transport_info(City, T, GosID)};
 handle(_City, _Method, _) ->
     {404, json_error(<<"method_not_found">>)}.
 
@@ -61,22 +52,18 @@ handle(_City, _Method, _) ->
 
 params(Req) ->
     case cowboy_req:method(Req) of
-        <<"GET">> -> params(qs, cowboy_req:qs(Req));
-        _         -> params(body, cowboy_req:body(Req))
+        <<"GET">> -> qs_params(cowboy_req:qs(Req));
+        _         -> body_params(cowboy_req:body(Req))
     end.
 
-params(qs, <<>>) -> undefined;
-params(qs, Val) -> Val;
-params(body, {ok, Val, _}) -> Val;
-params(body, _) -> undefined.
+qs_params(<<>>) -> undefined;
+qs_params(Val) -> Val.
+
+body_params({ok, Val, _}) -> Val;
+body_params(_) -> undefined.
 
 json_error(Msg) ->
     [{<<"error">>, Msg}].
 
-city_to_module(City) ->
-    PName = list_to_atom("transee_city_" ++ binary_to_list(City)),
-    try
-        sys:get_status(PName), PName
-    catch
-        _:_ -> undefined
-    end.
+city_to_module(<<"yaroslavl">>) -> transee_city_yaroslavl;
+city_to_module(_) -> undefined.

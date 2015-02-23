@@ -1,3 +1,5 @@
+-include_lib("std/include/std.hrl").
+
 -define(CHILD(Name, Module, Type, Args),
     {Name, {Module, start_link, Args}, permanent, 5000, Type, [Module]}).
 -define(dbg(Param), io:format("~p~n", [Param])).

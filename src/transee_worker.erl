@@ -3,9 +3,10 @@
 -include("transee.hrl").
 -export([ start_link/1
         , transports/1
-        , positions/1, positions/2, positions/3
+        , positions/1, positions/3
         , routes/1
         , stations/1
+        , transport_info/3
         % gen_server callbacks
         , init/1
         , handle_call/3
@@ -24,23 +25,27 @@ transports(City) ->
 positions(City) ->
     gen_server:call(City, positions).
 
-positions(City, Type) ->
-    [{Type, gen_server:call(City, {positions, Type})}].
-
 positions(City, Type, IDs) ->
-    Types = gen_server:call(City, {positions, Type}),
-    [{Type, lists:foldl(fun(ID, Acc) ->
-        case proplists:get_value(ID, Types) of
-            undefined -> Acc;
-            Value     -> [{ID, Value} | Acc]
-        end
-    end, [], IDs)}].
+    FilteredByType = gen_server:call(City, {positions, Type}),
+    [TrnsportItems|_] = lists:map(fun(Transports) ->
+        Items = proplists:get_value(<<"items">>, Transports),
+        lists:filter(fun(Item) ->
+            V = proplists:get_value(<<"id">>, Item),
+            lists:member(V, IDs)
+        end, Items)
+    end, FilteredByType),
+    [ {<<"type">>, Type}
+    , {<<"items">>, TrnsportItems}
+    ].
 
 routes(City) ->
     gen_server:call(City, routes).
 
 stations(City) ->
     gen_server:call(City, stations).
+
+transport_info(City, ID, GosID) ->
+    gen_server:call(City, {transport_info, ID, GosID}).
 
 %%
 %% GenServer callbacks
@@ -55,11 +60,16 @@ handle_call(transports, _From, #worker_state{transports = Transports} = State) -
 handle_call(positions, _From, #worker_state{positions = Positions} = State) ->
     {reply, Positions, State};
 handle_call({positions, Type}, _From, #worker_state{positions = Positions} = State) ->
-    {reply, proplists:get_value(Type, Positions, []), State};
+    FilteredPositions = lists:filter(fun(E) ->
+        proplists:get_value(<<"type">>, E) == Type
+    end, Positions),
+    {reply, FilteredPositions, State};
 handle_call(routes, _From, #worker_state{routes = Routes} = State) ->
     {reply, Routes, State};
 handle_call(stations, _From, #worker_state{stations = Stations} = State) ->
     {reply, Stations, State};
+handle_call({transport_info, ID, GosID}, _From, #worker_state{city = City} = State) ->
+    {reply, City:transport_info(ID, GosID), State};
 handle_call(_Req, _From, State) ->
     {noreply, State}.
 
