@@ -1,6 +1,6 @@
 -module(transee_city_yaroslavl).
 -include("transee.hrl").
--export([transports/1, positions/1, routes/1, stations/1, transport_info/2]).
+-export([transports/1, positions/1, routes/1, stations/1, transport_info/2, station_info/1]).
 -define(to_num(N), (std_cast:to_number(N))).
 
 %%
@@ -66,15 +66,27 @@ stations(Source) ->
     lists:map(fun({{RouteName, RouteID}, Numbers}) ->
         Response = request_stations(RouteID,
             transee_util:extract_transport_ids(Numbers)),
-        {RouteName, case Response of
+        Items = case Response of
             {error, _} ->
                 [];
             {ok, Stations} ->
-                lists:map(fun([_, Lat, Lon | _]) ->
-                    [?to_num(Lat), ?to_num(Lon)]
+                lists:map(fun([ID, Lat, Lon | _]) ->
+                    [ {<<"id">>, ID}
+                    , {<<"position">>, [?to_num(Lat), ?to_num(Lon)]}
+                    ]
                 end, Stations)
-        end}
+        end,
+        [ {<<"type">>, RouteName}
+        , {<<"items">>, Items}
+        ]
     end, Source).
+
+station_info(ID) ->
+    HTML = win1251_to_utf8(request_station_info(ID)),
+    [Name | Transports] = binary:split(HTML, <<"<br>">>, [global]),
+    [ {<<"name">>, binary:replace(Name, [<<"<b>">>, <<"</b>">>, <<$">>], <<>>, [global])}
+    , {<<"transports">>, Transports}
+    ].
 
 transport_info(ID, GosID) ->
     HTML = request_info(type_id(ID), GosID),
@@ -119,6 +131,10 @@ request_stations(ID, Numbers) ->
         [ID, numbers_for_url(Numbers)]),
     {ok, Body} = submit_request(URL),
     parse_json(Body).
+
+request_station_info(ID) ->
+    URL = create_url("http://www.ot76.ru/getstationinfo.php?id=~s", [ID]),
+    {ok, Body} = submit_request(URL), Body.
 
 request_info(ID, GosID) ->
     URL = create_url("http://www.ot76.ru/mob/getpeinfo.php?vt=~s&npe=~s",

@@ -2,7 +2,7 @@
 -compile(export_all).
 
 decode(T) ->
-  Bin=lists:map(
+  Bin = lists:map(
     fun(X) ->
         %io:format("decode win1251: ~w~n", [X]),
         case X of
@@ -263,5 +263,4 @@ decode(T) ->
           16#FF -> 16#044F; %% CYRILLIC SMALL LETTER YA
           Other -> Other
       end
-  end, T),
-  {ok, Utf8} = utf8:to_binary(Bin).
+  end, T), utf8:to_binary(Bin).

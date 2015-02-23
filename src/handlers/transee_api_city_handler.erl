@@ -41,7 +41,9 @@ handle(City, <<"routes">>, _) ->
     {200, transee_worker:routes(City)};
 handle(City, <<"stations">>, _) ->
     {200, transee_worker:stations(City)};
-handle(City, <<"transport">>, #{<<"type">> := T, <<"gos_id">> := GosID}) ->
+handle(City, <<"station_info">>, #{<<"id">> := ID}) ->
+    {200, transee_worker:station_info(City, ID)};
+handle(City, <<"transport_info">>, #{<<"type">> := T, <<"gos_id">> := GosID}) ->
     {200, transee_worker:transport_info(City, T, GosID)};
 handle(_City, _Method, _) ->
     {404, json_error(<<"method_not_found">>)}.

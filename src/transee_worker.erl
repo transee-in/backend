@@ -7,6 +7,7 @@
         , routes/1
         , stations/1
         , transport_info/3
+        , station_info/2
         % gen_server callbacks
         , init/1
         , handle_call/3
@@ -44,6 +45,9 @@ routes(City) ->
 stations(City) ->
     gen_server:call(City, stations).
 
+station_info(City, ID) ->
+    gen_server:call(City, {station_info, ID}).
+
 transport_info(City, ID, GosID) ->
     gen_server:call(City, {transport_info, ID, GosID}).
 
@@ -68,6 +72,8 @@ handle_call(routes, _From, #worker_state{routes = Routes} = State) ->
     {reply, Routes, State};
 handle_call(stations, _From, #worker_state{stations = Stations} = State) ->
     {reply, Stations, State};
+handle_call({station_info, ID}, _From, #worker_state{city = City} = State) ->
+    {reply, City:station_info(ID), State};
 handle_call({transport_info, ID, GosID}, _From, #worker_state{city = City} = State) ->
     {reply, City:transport_info(ID, GosID), State};
 handle_call(_Req, _From, State) ->

@@ -7,7 +7,7 @@ from_binary(Bin) ->
     decode_binary(Bin, []).
 
 decode_binary(<<>>, Str) ->
-    {ok, lists:reverse(Str)};
+    lists:reverse(Str);
 %% 0-7F  0zzzzzzz
 decode_binary(<<2#0:1,CodePoint:7,Rest/binary>>, Str) ->
      decode_binary(Rest, [CodePoint|Str]);
@@ -31,7 +31,7 @@ to_binary(Str) ->
     encode_utf32(Str, []).
 
 encode_utf32([], Utf8) ->
-    {ok, list_to_binary(lists:reverse(Utf8))};
+    list_to_binary(lists:reverse(Utf8));
  %% 0-7F  0zzzzzzz -> 0zzzzzzz
 encode_utf32([U32|Str], Utf8) when U32 < 16#80 ->
     encode_utf32(Str, [U32|Utf8]);
