@@ -9,9 +9,14 @@
 
 transports(Source) ->
     lists:map(fun({{RouteName, _RouteID}, Numbers}) ->
-        {RouteName, lists:map(fun({ID, Number}) ->
-            {?l2b(ID), Number}
-        end, Numbers)}
+        Items = lists:map(fun({ID, Number}) ->
+            [ {<<"id">>, list_to_binary(ID)}
+            , {<<"name">>, Number}
+            ]
+        end, Numbers),
+        [ {<<"type">>, RouteName}
+        , {<<"items">>, Items}
+        ]
     end, Source).
 
 positions(Source) ->
