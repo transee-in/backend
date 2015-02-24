@@ -29,7 +29,8 @@ positions(Source) ->
             {ok, Positions} ->
                 lists:map(fun([GosID, Lon, Lat, Angle, ID, _Title, _Image | _]) ->
                     {ID, [ {<<"gos_id">>, GosID}
-                         , {<<"position">>, [?to_num(Lat), ?to_num(Lon), ?to_num(Angle)]}
+                         , {<<"angle">>, ?to_num(Angle)}
+                         , {<<"position">>, [?to_num(Lat), ?to_num(Lon)]}
                          ]}
                 end, Positions)
         end}
