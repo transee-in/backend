@@ -10,6 +10,13 @@ init(Req, State) ->
         Val       -> qsp:decode(Val)
     end,
 
+    spawn(fun() ->
+        influx:post(transee, api_request,
+            [ {city, City}
+            , {method, Method}
+            ])
+    end),
+
     {Status, Data} = handle(City, Method, Params),
     
     Body  = jsx:encode(Data),
@@ -35,7 +42,7 @@ handle(City, <<"positions">>, #{<<"type">> := T, <<"numbers">> := N}) when is_li
     {200, Result};
 handle(City, <<"positions">>, no_args) ->
     {200, transee_worker:positions(City)};
-handle(City, <<"positions">>, _) ->
+handle(_City, <<"positions">>, _) ->
     {404, json_error(<<"badly_formed_filter">>)};
 handle(City, <<"routes">>, _) ->
     {200, transee_worker:routes(City)};
