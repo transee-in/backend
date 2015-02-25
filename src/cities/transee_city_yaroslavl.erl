@@ -55,17 +55,23 @@ positions(Source) ->
 
 routes(Source) ->
     lists:map(fun({{RouteName, RouteID}, Numbers}) ->
-        {RouteName, lists:map(fun({ID, _Number}) ->
+        Items = lists:map(fun({ID, _Number}) ->
             BinaryID = ?l2b(ID),
-            {BinaryID, case request_route(RouteID, ID) of
+            Route = case request_route(RouteID, ID) of
                 {error, _} ->
                     [];
-                {ok, Routes} ->
+                {ok, R} ->
                     lists:map(fun([Lat, Lon | _]) ->
                         [?to_num(Lat), ?to_num(Lon)]
-                    end, Routes)
-            end}
-        end, Numbers)}
+                    end, R)
+            end,
+            [ {<<"id">>, BinaryID}
+            , {<<"route">>, Route}
+            ]
+        end, Numbers),
+        [ {<<"type">>, RouteName}
+        , {<<"items">>, Items}
+        ]
     end, Source).
 
 stations(Source) ->
