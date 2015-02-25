@@ -7,7 +7,6 @@
 
 
 start() ->
-    ibrowse:start(),
     application:ensure_all_started(?MODULE).
 
 stop() ->
