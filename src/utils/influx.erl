@@ -24,10 +24,9 @@ make_url(DB) ->
     "http://localhost:8086/db/" ++ std_cast:to_list(DB) ++ "/series?u=root&p=root".
 
 post_request(URL, Data) ->
-    io:format("json: ~s~n", [jsx:encode([Data])]),
     Request = {URL, [], "application/json", jsx:encode([Data])},
     case httpc:request(post, Request, [], []) of
-        {ok, {{_, 200, _}, _Headers, Body}} ->
+        {ok, {{_, 200, _}, _Headers, _Body}} ->
             ok;
         {ok, {_, _, Reason}} ->
             {error, Reason};
