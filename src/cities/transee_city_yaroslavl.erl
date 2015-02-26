@@ -37,17 +37,18 @@ positions(Source) ->
     end, Source),
     lists:map(fun({{RouteName, _RouteID}, Numbers}) ->
         Types = proplists:get_value(RouteName, Positions),
-        Items = lists:map(fun({ID, Number}) ->
+        Items = lists:foldr(fun({ID, Number}, Acc) ->
             BinaryID = ?l2b(ID),
-            ClearPositions = case proplists:lookup_all(BinaryID, Types) of
-                [] -> [];
-                Values -> lists:map(fun({_, V}) -> V end, Values)
-            end,
-            [ {<<"id">>, BinaryID}
-            , {<<"name">>, Number}
-            , {<<"items">>, ClearPositions}
-            ]
-        end, Numbers),
+            case proplists:lookup_all(BinaryID, Types) of
+                [] -> Acc;
+                Values ->
+                    ClearPositions = lists:map(fun({_, V}) -> V end, Values),
+                    [[ {<<"id">>, BinaryID}
+                     , {<<"name">>, Number}
+                     , {<<"items">>, ClearPositions}
+                     ] | Acc]
+            end
+        end, [], Numbers),
         [ {<<"type">>, RouteName}
         , {<<"items">>, Items}
         ]
