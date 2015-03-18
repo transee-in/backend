@@ -15,6 +15,8 @@
         , handle_info/2
         , terminate/2
         , code_change/3
+        % helpers
+        , open_source/1
         ]).
 
 start_link(City) ->
