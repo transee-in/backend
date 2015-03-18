@@ -105,8 +105,8 @@ transport_info(ID, GosID) ->
     HTML = request_info(type_id(ID), GosID),
     Path = "//table/tr",
     Tree = mochiweb_html:parse(HTML),
-    lists:foldl(fun parse_transport_info/2, [],
-        mochiweb_xpath:execute(Path, Tree)).
+    lists:reverse(lists:foldl(fun parse_transport_info/2, [],
+        mochiweb_xpath:execute(Path, Tree))).
 
 parse_transport_info({<<"tr">>, [], Content}, Acc) ->
     case match_content(Content) of
