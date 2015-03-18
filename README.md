@@ -2,10 +2,6 @@
 
 ---
 
-### documentation
-
-[API Documentation](/docs/api.md).
-
 ---
 
 ### deploy
