@@ -2,7 +2,7 @@
 
 -define(mock_http_with_response(City, Filename, Fun), ((fun() ->
     {ok, __CWD} = file:get_cwd(),
-    __Path = filename:join([__CWD, "..", "test", "cities", City, Filename]),
+    __Path = filename:join([__CWD, "..", "test", "cities", City, "data", Filename]),
     {ok, __Content} = file:read_file(__Path),
     meck:new(transee_http, [unstick, passthrough]),
     meck:expect(transee_http, request, fun(_,_,_) -> {ok, __Content} end),
