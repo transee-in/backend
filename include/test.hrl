@@ -4,12 +4,12 @@
     {ok, __CWD} = file:get_cwd(),
     __Path = filename:join([__CWD, "..", "test", "cities", City, Filename]),
     {ok, __Content} = file:read_file(__Path),
-    meck:new(httpc, [unstick, passthrough]),
-    meck:expect(httpc, request, fun(_,_,_,_) -> {ok, {s, h, __Content}} end),
+    meck:new(transee_http, [unstick, passthrough]),
+    meck:expect(transee_http, request, fun(_,_,_) -> {ok, __Content} end),
     try
         Fun()
     after
-        meck:unload(httpc)
+        meck:unload(transee_http)
     end
 end)())).
 

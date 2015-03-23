@@ -173,10 +173,7 @@ create_url(Format, Args) ->
     lists:flatten(io_lib:format(Format, Args)).
 
 submit_request(URL) ->
-    {ok, {_Status, _Headers, Body}} = httpc:request(get,
-        {URL, [{"Referer", "http://www.ot76.ru/"}]}, [],
-        [{body_format, binary}]),
-    {ok, Body}.
+    transee_http:request(get, URL, [{"Referer", "http://www.ot76.ru/"}]).
 
 parse_json(Body) ->
     try jsx:decode(Body) of
