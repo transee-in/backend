@@ -74,5 +74,9 @@ body_params(_) -> undefined.
 json_error(Msg) ->
     [{<<"error">>, Msg}].
 
-city_to_module(<<"yaroslavl">>) -> transee_city_yaroslavl;
-city_to_module(_) -> undefined.
+city_to_module(Name) ->
+    FilterFn = fun({_M, C}) -> C == Name end,
+    case lists:filter(FilterFn, transee:config(cities)) of
+        [{M, _C}] -> M;
+        _ -> undefined
+    end.
