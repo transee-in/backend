@@ -8,11 +8,16 @@ transports(Source) ->
     Types = proplists:get_value(types, Source),
     Transports = proplists:get_value(transports, Source),
     lists:map(fun({Type, TypeName}) ->
-        Items = lists:map(fun({ID, TType, Name}) when Type == TType ->
-            [ {<<"id">>, ?to_bin(format_ids(ID))}
-            , {<<"name">>, ?to_bin(Name)}
-            ]
-        end, Transports),
+        Items = lists:foldr(fun({ID, TType, Name}, Acc) ->
+            if
+                Type == TType ->
+                    [[ {<<"id">>, ?to_bin(format_ids(ID))}
+                     , {<<"name">>, ?to_bin(Name)}
+                     ] | Acc];
+                true ->
+                    Acc
+            end
+        end, [], Transports),
         [ {<<"type">>, TypeName}
         , {<<"items">>, Items}
         ]
@@ -63,16 +68,21 @@ routes(City, URL, Source) ->
     Types = proplists:get_value(types, Source),
     Transports = proplists:get_value(transports, Source),
     lists:map(fun({Type, TypeName}) ->
-        TypeItems = lists:foldl(fun({IDs, TType, _Name}, Acc) when TType == Type ->
-            TransportRoutes = lists:foldl(fun(ID, Acc2) ->
-                Resp = request(URL, [{city, City}, {type, 0}, {rid, ID}]),
-                Acc2 ++ lists:map(fun(#{<<"lat">> := Lat, <<"lng">> := Lng}) ->
-                    format_lat_lon(Lat, Lng)
-                end, Resp)
-            end, [], IDs),
-            [[ {<<"id">>, ?to_bin(format_ids(IDs))}
-             , {<<"route">>, TransportRoutes}
-             ] | Acc]
+        TypeItems = lists:foldl(fun({IDs, TType, _Name}, Acc) ->
+            if
+                Type == TType ->
+                    TransportRoutes = lists:foldl(fun(ID, Acc2) ->
+                        Resp = request(URL, [{city, City}, {type, 0}, {rid, ID}]),
+                        Acc2 ++ lists:map(fun(#{<<"lat">> := Lat, <<"lng">> := Lng}) ->
+                            format_lat_lon(Lat, Lng)
+                        end, Resp)
+                    end, [], IDs),
+                    [[ {<<"id">>, ?to_bin(format_ids(IDs))}
+                     , {<<"route">>, TransportRoutes}
+                     ] | Acc];
+                true ->
+                    Acc
+            end
         end, [], Transports),
         [ {<<"type">>, TypeName}
         , {<<"items">>, TypeItems}
