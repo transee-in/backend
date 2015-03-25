@@ -22,8 +22,8 @@ json.each_with_index do |obj, idx|
 end
 
 Hash[transports.sort].map do |name, obj|
-  id = obj[:id].map { |v| "#{v}-0" }.join(',')
-  id = %|"#{id}",|
+  id = obj[:id].map(&:to_s).join(', ')
+  id = "[#{id}],"
   formatted_name = if name =~ /[^\d]/ui
     %|"#{name}"/utf8|
   else
