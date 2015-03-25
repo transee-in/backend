@@ -6,6 +6,10 @@ init(Req, State) ->
     Body  = jsx:encode(city_list()),
     Reply = cowboy_req:reply(200, [?json_reponse], Body, Req),
 
+    spawn(fun() ->
+        influx:post(transee, api_request, [{method, <<"cities">>}])
+    end),
+
     {ok, Reply, State}.
 
 %%
