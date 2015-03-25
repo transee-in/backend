@@ -35,7 +35,7 @@ handle_cast(_Req, State) ->
 handle_info(ping, State) ->
     init_ping_timer(),
     send_ping(),
-    {noreply, []};
+    {noreply, State};
 handle_info(Info, State) ->
     {reply, Info, State}.
 
