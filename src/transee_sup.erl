@@ -7,7 +7,8 @@ start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
-    Workers = lists:map(fun({Module, _Name}) ->
+    CityWorkers = lists:map(fun({Module, _Name}) ->
         ?CHILD(Module, transee_worker, worker, [Module])
     end, transee:config(cities)),
-    {ok, {{one_for_one, 5, 10}, Workers}}.
+    PingWorker = ?CHILD(ping, transee_ping, worker, []),
+    {ok, {{one_for_one, 5, 10}, [PingWorker | CityWorkers]}}.

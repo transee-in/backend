@@ -4,8 +4,9 @@
     {Name, {Module, start_link, Args}, permanent, 5000, Type, [Module]}).
 -define(dbg(Param), io:format("~p~n", [Param])).
 
--define(INIT_CITY_INTERVAL,   1000). % 1 second
--define(RELOAD_CITY_INTERVAL, 30000). % 30 seconds
+-define(PING_INTERVAL,        60 * 60 * 1000). % 1 hour
+-define(INIT_CITY_INTERVAL,   1  * 1000).      % 1 second
+-define(RELOAD_CITY_INTERVAL, 30 * 1000).      % 30 seconds
 
 -define(json_reponse, {<<"content-type">>, <<"application/json; charset=utf-8">>}).
 
