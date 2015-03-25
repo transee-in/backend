@@ -8,30 +8,31 @@ require 'net/http'
 content = Net::HTTP.get(URI.parse(ARGV[0])).force_encoding("UTF-8")
 # content = File.read('./file.json')
 json = JSON.load(content)
-transport_types = {}
+transports = {}
+max_id = 0
 
 json.each_with_index do |obj, idx|
-  # they duplicate transport for two directions
-  if idx % 2 == 0
-    transport_types[obj['type']] ||= []
-
-    name = if obj['name'] =~ /[^\d]/ui
-      %|"#{obj['name']}"/utf8|
-    else
-      %|"#{obj['name']}"|
-    end
-
-    transport_types[obj['type']] << [obj['id'], name]
+  if transports.key?(obj['name'])
+    transports[obj['name']][:id] << obj['id']
+  else
+    transports[obj['name']] ||= {
+      id: [obj['id']], type: obj['type']
+    }
   end
 end
 
-transport_types.each do |type, transports|
-  puts "-- type: #{type}"
-  transports.sort_by! { |id, name| id }
-  transports.each_slice(3) do |bucket|
-    bucket.each do |id, name|
-      print %|, {"#{id}", <<#{name}>>}|
-    end
-    puts
+Hash[transports.sort].map do |name, obj|
+  id = obj[:id].map { |v| "#{v}-0" }.join(',')
+  id = %|"#{id}",|
+  formatted_name = if name =~ /[^\d]/ui
+    %|"#{name}"/utf8|
+  else
+    %|"#{name}"|
   end
+
+  max_id = id.size if id.size > max_id
+
+  [id, obj[:type], formatted_name]
+end.each do |obj|
+  puts %|, {%-#{max_id}s <<"%s"/utf8>>, <<%s>>}| % obj
 end

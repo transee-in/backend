@@ -15,3 +15,9 @@ end)())).
 
 -define(assert_json(JSON), json:from_binary(jsx:encode(JSON))).
 -define(open_source(Mod), transee_worker:open_source(Mod)).
+
+-define(mock_time(Time), ((fun() ->
+    meck:new(transee_time, [unstick, passthrough]),
+    meck:expect(transee_time, now, fun() -> Time end)
+end)())).
+-define(unmock_time, meck:unload(transee_time)).

@@ -4,7 +4,7 @@
   , {registered, []}
   , {applications,
     [ kernel, stdlib, std
-    , inets, lager, cowboy
+    , inets, lager, cowboy, qdate
     ]}
   , {mod, {transee_app, []}}
   , {env, []}

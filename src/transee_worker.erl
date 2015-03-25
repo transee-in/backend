@@ -74,8 +74,8 @@ handle_call(routes, _From, #worker_state{routes = Routes} = State) ->
     {reply, Routes, State};
 handle_call(stations, _From, #worker_state{stations = Stations} = State) ->
     {reply, Stations, State};
-handle_call({station_info, ID}, _From, #worker_state{city = City} = State) ->
-    {reply, City:station_info(ID), State};
+handle_call({station_info, ID}, _From, #worker_state{city = City, source = Source, stations = Stations} = State) ->
+    {reply, City:station_info(ID, Stations, Source), State};
 handle_call({transport_info, ID, GosID}, _From, #worker_state{city = City} = State) ->
     {reply, City:transport_info(ID, GosID), State};
 handle_call(_Req, _From, State) ->

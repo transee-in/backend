@@ -50,10 +50,13 @@ test_stations() ->
     end).
 
 test_station_info() ->
+    Stations = ?mock_http_with_response(?MOD, "getstations.json", fun() -> ok end),
     ?mock_http_with_response(?MOD, "getstationinfo.html", fun() ->
-        JSON = ?assert_json(?MOD:station_info(<<"808">>)),
+        Source = ?open_source(?MOD),
+        JSON = ?assert_json(?MOD:station_info(<<"808">>, Stations, Source)),
         ?assertEqual(<<"Station Some Name">>, json:get(<<"/name">>, JSON)),
-        ?assertEqual(<<"Au 19k. Ul. Some - Nothin.">>, json:get(<<"/transports/0">>, JSON))
+        ?assertEqual(<<"Au 19k. Ul. Some - Nothin.">>, json:get(<<"/transports/0">>, JSON)),
+        ?assertEqual([], json:get(<<"/forecasts">>, JSON))
     end).
 
 test_transport_info() ->

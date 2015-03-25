@@ -5,9 +5,9 @@ RELX   = ./relx
 CONFIG = config/sys.config
 env   := development
 
-.PHONY: all get-deps compile release restart-release etest test
+.PHONY: all get-deps compile release restart-release test
 
-all: compile test
+all: compile dev
 
 deploy-node: get-deps compile release restart-release
 
@@ -26,6 +26,9 @@ compile: get-deps
 compile-app:
 	@$(REBAR) compile skip_deps=true
 
+test:
+	@$(REBAR) eu
+
 release:
 	@$(RELX) release
 
@@ -34,8 +37,3 @@ restart-release:
 
 dev:
 	@erl -pa deps/**/ebin ebin -config config/sys.config -s $(APP)
-
-etest: compile-app
-	@ERL_FLAGS="-config config/sys.config" deps/etest/bin/etest-runner
-
-test: etest

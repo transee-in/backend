@@ -1,6 +1,6 @@
 -module(transee_city_yaroslavl).
 -include("transee.hrl").
--export([transports/1, positions/1, routes/1, stations/1, transport_info/2, station_info/1]).
+-export([transports/1, positions/1, routes/1, stations/1, transport_info/2, station_info/3]).
 -define(to_num(N), (std_cast:to_number(N))).
 
 %%
@@ -94,11 +94,12 @@ stations(Source) ->
         ]
     end, Source).
 
-station_info(ID) ->
+station_info(ID, _Stations, _Source) ->
     HTML = win1251_to_utf8(request_station_info(ID)),
     [Name | Transports] = binary:split(HTML, <<"<br>">>, [global]),
     [ {<<"name">>, binary:replace(Name, [<<"<b>">>, <<"</b>">>, <<$">>], <<>>, [global])}
     , {<<"transports">>, Transports}
+    , {<<"forecasts">>, []}
     ].
 
 transport_info(ID, GosID) ->
