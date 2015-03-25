@@ -146,8 +146,8 @@ find_by_id(ID, Transports) ->
         lists:member(std_cast:to_integer(ID), IDs)
     end, Transports),
     case Finded of
-        [Transport] -> Transport;
-        _           -> []
+        [Transport|_] -> Transport;
+        _             -> []
     end.
 
 create_map_with_types(Types) ->
