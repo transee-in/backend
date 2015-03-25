@@ -85,19 +85,24 @@ handle_cast(_Req, State) ->
     {noreply, State}.
 
 handle_info(init, #worker_state{city = City} = State) ->
-    Source     = open_source(City),
-    Transports = City:transports(Source),
-    Positions  = City:positions(Source),
-    Stations   = City:stations(Source),
-    Routes     = City:routes(Source),
-    {noreply, State#worker_state{
-        positions = Positions, stations = Stations,
-        routes = Routes, source = Source,
-        transports = Transports}};
-handle_info(reload, #worker_state{city = City, source = S} = State) ->
+    Source = open_source(City),
+    spawn(City, transports, [self(), Source]),
+    spawn(City, positions,  [self(), Source]),
+    spawn(City, stations,   [self(), Source]),
+    spawn(City, routes,     [self(), Source]),
+    {noreply, State#worker_state{source = Source}};
+handle_info({update, transports, Data}, #worker_state{} = State) ->
+    {noreply, State#worker_state{transports = Data}};
+handle_info({update, positions, Data}, #worker_state{} = State) ->
+    {noreply, State#worker_state{positions = Data}};
+handle_info({update, stations, Data}, #worker_state{} = State) ->
+    {noreply, State#worker_state{stations = Data}};
+handle_info({update, routes, Data}, #worker_state{} = State) ->
+    {noreply, State#worker_state{routes = Data}};
+handle_info(reload, #worker_state{city = City, source = Source} = State) ->
     reload_data_timer(),
-    Positions = City:positions(S),
-    {noreply, State#worker_state{positions = Positions}};
+    spawn(City, positions, [self(), Source]),
+    {noreply, State};
 handle_info(Info, State) ->
     {reply, Info, State}.
 

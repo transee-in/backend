@@ -1,12 +1,19 @@
 -module(transee_city_yaroslavl).
 -include("transee.hrl").
--export([transports/1, positions/1, routes/1, stations/1, transport_info/2, station_info/3]).
--define(to_num(N), (std_cast:to_number(N))).
+-export([ transports/1, transports/2
+        , positions/1, positions/2
+        , routes/1, routes/2
+        , stations/1, stations/2
+        , transport_info/2
+        , station_info/3
+        ]).
 
 %%
 %% Behavior
 %%
 
+transports(WorkerPid, Source) ->
+    WorkerPid ! {update, transports, transports(Source)}.
 transports(Source) ->
     lists:map(fun({{RouteName, _RouteID}, Numbers}) ->
         Items = lists:map(fun({ID, Number}) ->
@@ -19,6 +26,8 @@ transports(Source) ->
         ]
     end, Source).
 
+positions(WorkerPid, Source) ->
+    WorkerPid ! {update, positions, positions(Source)}.
 positions(Source) ->
     Positions = lists:map(fun({{RouteName, RouteID}, Numbers}) ->
         Response = request_positions(RouteID,
@@ -54,6 +63,8 @@ positions(Source) ->
         ]
     end, Source).
 
+routes(WorkerPid, Source) ->
+    WorkerPid ! {update, routes, routes(Source)}.
 routes(Source) ->
     lists:map(fun({{RouteName, RouteID}, Numbers}) ->
         Items = lists:map(fun({ID, _Number}) ->
@@ -75,6 +86,8 @@ routes(Source) ->
         ]
     end, Source).
 
+stations(WorkerPid, Source) ->
+    WorkerPid ! {update, stations, stations(Source)}.
 stations(Source) ->
     lists:map(fun({{RouteName, RouteID}, Numbers}) ->
         Response = request_stations(RouteID,

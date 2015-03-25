@@ -5,8 +5,10 @@
 -define(dbg(Param), io:format("~p~n", [Param])).
 
 -define(PING_INTERVAL,        60 * 60 * 1000). % 1 hour
--define(INIT_CITY_INTERVAL,   1  * 1000).      % 1 second
+-define(INIT_CITY_INTERVAL,   50).             % 50 ms
 -define(RELOAD_CITY_INTERVAL, 30 * 1000).      % 30 seconds
+
+-define(to_num(N), std_cast:to_number(N)).
 
 -define(json_reponse, {<<"content-type">>, <<"application/json; charset=utf-8">>}).
 

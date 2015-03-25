@@ -1,5 +1,12 @@
 -include_lib("eunit/include/eunit.hrl").
 
+-define(send_receive(M, F, A), ((fun() ->
+    spawn(M, F, [self() | A]),
+    receive Data -> Data
+    after   100 -> undefined
+    end
+end)())).
+
 -define(mock_http_with_response(City, Filename, Fun), ((fun() ->
     {ok, __CWD} = file:get_cwd(),
     __Path = filename:join([__CWD, "..", "test", "cities", City, "data", Filename]),
