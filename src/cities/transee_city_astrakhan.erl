@@ -2,7 +2,8 @@
 -include("transee.hrl").
 -define(city, <<"astrahan">>).
 -define(tz, 3 * 60 * 60). % GMT+0300 - 3 hours
--export([ transports/1, transports/2
+-export([ coordinates/0
+        , transports/1, transports/2
         , positions/1, positions/2
         , routes/1, routes/2
         , stations/1, stations/2
@@ -13,6 +14,9 @@
 %%
 %% Behavior
 %%
+
+coordinates() ->
+    [46.34968, 48.04076].
 
 transports(WorkerPid, Source) ->
     WorkerPid ! {update, transports, transports(Source)}.

@@ -32,6 +32,8 @@ handle(undefined, _, _) ->
     {404, json_error(<<"city_not_found">>)};
 handle(City, undefined, _) ->
     {200, transee_worker:transports(City)};
+handle(City, <<"coordinates">>, no_args) ->
+    {200, transee_worker:coordinates(City)};
 handle(City, <<"positions">>, #{<<"type">> := T, <<"numbers">> := N}) when is_list(T), is_map(N) ->
     Result = lists:foldl(fun(Type, Acc) ->
         case maps:get(Type, N, undefined) of

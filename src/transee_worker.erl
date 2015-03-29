@@ -2,6 +2,7 @@
 -behaviour(gen_server).
 -include("transee.hrl").
 -export([ start_link/1
+        , coordinates/1
         , transports/1
         , positions/1, positions/3
         , routes/1
@@ -21,6 +22,9 @@
 
 start_link(City) ->
     gen_server:start_link({local, City}, ?MODULE, [City], []).
+
+coordinates(City) ->
+    gen_server:call(City, coordinates).
 
 transports(City) ->
     gen_server:call(City, transports).
@@ -61,6 +65,8 @@ init([City]) ->
     init_data_timer(), reload_data_timer(),
     {ok, #worker_state{city = City}}.
 
+handle_call(coordinates, _From, #worker_state{city = City} = State) ->
+    {reply, City:coordinates(), State};
 handle_call(transports, _From, #worker_state{transports = Transports} = State) ->
     {reply, Transports, State};
 handle_call(positions, _From, #worker_state{positions = Positions} = State) ->
