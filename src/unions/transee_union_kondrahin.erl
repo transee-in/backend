@@ -38,7 +38,7 @@ positions(City, URL, Source) ->
             Fn = fun(#{<<"dir">> := Angle, <<"lat">> := Lat, <<"lon">> := Lon
                       , <<"rid">> := ID, <<"rtype">> := Type, <<"id">> := GosID}, Acc) ->
                 Item = [ {<<"gos_id">>, GosID}, {<<"angle">>, Angle}
-                       , {<<"position">>, [Lat, Lon]}],
+                       , {<<"position">>, format_lat_lon(Lat, Lon)}],
                 RID = ?to_bin(ID),
                 OldItems = try
                     json:get([Type, RID], Acc)
