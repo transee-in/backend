@@ -110,7 +110,8 @@ stations(Source) ->
 station_info(ID, _Stations, _Source) ->
     HTML = win1251_to_utf8(request_station_info(ID)),
     [Name | Transports] = binary:split(HTML, <<"<br>">>, [global]),
-    [ {<<"name">>, binary:replace(Name, [<<"<b>">>, <<"</b>">>, <<$">>], <<>>, [global])}
+    [ {<<"name">>, binary:replace(Name,
+        [<<"<b>">>, <<"</b>">>, <<$">>], <<>>, [global])}
     , {<<"transports">>, Transports}
     , {<<"forecasts">>, []}
     ].
@@ -132,7 +133,8 @@ parse_transport_info({<<"tr">>, [], Content}, Acc) ->
 parse_transport_info(_, Acc) ->
     Acc.
 
-match_content([{<<"td">>, [], [Station|_]}, {<<"td">>, [{<<"align">>,<<"right">>}], [Time|_]}]) ->
+match_content([{<<"td">>, [], [Station|_]},
+        {<<"td">>, [{<<"align">>,<<"right">>}], [Time|_]}]) ->
     {ok, win1251_to_utf8(Station), Time};
 match_content(_) ->
     undefined.
