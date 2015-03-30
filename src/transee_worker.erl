@@ -34,16 +34,23 @@ positions(City) ->
 
 positions(City, Type, IDs) ->
     FilteredByType = gen_server:call(City, {positions, Type}),
-    [TrnsportItems|_] = lists:map(fun(Transports) ->
+    MaybeTransportItems = lists:map(fun(Transports) ->
         Items = proplists:get_value(<<"items">>, Transports),
         lists:filter(fun(Item) ->
             V = proplists:get_value(<<"id">>, Item),
             lists:member(V, IDs)
         end, Items)
     end, FilteredByType),
-    [ {<<"type">>, Type}
-    , {<<"items">>, TrnsportItems}
-    ].
+    case MaybeTransportItems of
+        [] ->
+            [ {<<"type">>, Type}
+            , {<<"items">>, []}
+            ];
+        [TransportItems|_] ->
+            [ {<<"type">>, Type}
+            , {<<"items">>, TransportItems}
+            ]
+    end.
 
 routes(City) ->
     gen_server:call(City, routes).

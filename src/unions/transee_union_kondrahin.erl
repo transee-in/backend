@@ -32,7 +32,7 @@ positions(City, URL, Source) ->
     Data = request(URL,
         [ {rids, RIDs}, {lat0, 0}, {lng0, 0}
         , {lat1, 90}, {lng1, 180}, {curk, 0}
-        , {city, City}]),
+        , {city, City}, {info, "0123"}]),
     RawItems = case Data of
         #{<<"anims">> := Positions} ->
             Fn = fun(#{<<"dir">> := Angle, <<"lat">> := Lat, <<"lon">> := Lon
