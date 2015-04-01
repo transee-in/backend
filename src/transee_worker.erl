@@ -98,6 +98,7 @@ handle_cast(_Req, State) ->
     {noreply, State}.
 
 handle_info(init, #worker_state{city = City} = State) ->
+    lager:info("Init city worker: ~p", [City]),
     Source = open_source(City),
     spawn(City, transports, [self(), Source]),
     spawn(City, positions,  [self(), Source]),
@@ -113,6 +114,7 @@ handle_info({update, stations, Data}, #worker_state{} = State) ->
 handle_info({update, routes, Data}, #worker_state{} = State) ->
     {noreply, State#worker_state{routes = Data}};
 handle_info(reload, #worker_state{city = City, source = Source} = State) ->
+    lager:info("Reload data for: ~p", [City]),
     reload_data_timer(),
     spawn(City, positions, [self(), Source]),
     {noreply, State};

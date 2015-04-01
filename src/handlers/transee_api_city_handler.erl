@@ -10,6 +10,8 @@ init(Req, State) ->
         Val       -> qsp:decode(Val)
     end,
 
+    lager:info("API request ~p:~s~n~p~n", [City, Method, Params]),
+
     spawn(fun() ->
         influx:post(transee, api_request,
             [ {city, City}
