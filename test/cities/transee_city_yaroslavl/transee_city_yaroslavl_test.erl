@@ -45,8 +45,12 @@ test_stations() ->
     ?mock_http_with_response(?MOD, "getstations.json", fun() ->
         Source = ?open_source(?MOD),
         JSON = ?assert_json(?MOD:stations(Source)),
-        ?assertEqual(<<"258">>, json:get(<<"/0/items/0/id">>, JSON)),
-        ?assertEqual([57.588407, 39.845435], json:get(<<"/0/items/0/position">>, JSON))
+        ?assertEqual(<<"999">>, json:get(<<"/0/id">>, JSON)),
+        ?assertEqual([57.589139, 39.846764], json:get(<<"/0/position">>, JSON)),
+        Set = lists:foldl(fun(#{<<"id">> := ID}, Acc) ->
+            sets:add_element(ID, Acc)
+        end, sets:new(), JSON),
+        ?assertEqual(length(JSON), sets:size(Set))
     end).
 
 test_station_info() ->

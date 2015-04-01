@@ -93,23 +93,24 @@ routes(Source) ->
 stations(WorkerPid, Source) ->
     WorkerPid ! {update, stations, stations(Source)}.
 stations(Source) ->
-    lists:map(fun({{RouteName, RouteID}, Numbers}) ->
+    Stations = lists:foldl(fun({{RouteName, RouteID}, Numbers}, Acc) ->
         Response = request_stations(RouteID,
             transee_util:extract_transport_ids(Numbers)),
-        Items = case Response of
+        case Response of
             {error, _} ->
-                [];
-            {ok, Stations} ->
-                lists:map(fun([ID, Lat, Lon | _]) ->
-                    [ {<<"id">>, ID}
-                    , {<<"position">>, [?to_num(Lat), ?to_num(Lon)]}
-                    ]
-                end, Stations)
-        end,
-        [ {<<"type">>, RouteName}
-        , {<<"items">>, Items}
-        ]
-    end, Source).
+                Acc;
+            {ok, TypeStations} ->
+                Items = lists:foldl(fun([ID, Lat, Lon | _], Acc2) ->
+                    maps:put(ID, [?to_num(Lat), ?to_num(Lon)], Acc2)
+                end, #{}, TypeStations),
+                maps:merge(Items, Acc)
+        end
+    end, #{}, Source),
+    maps:fold(fun(K, V, Acc) ->
+        [[ {<<"id">>, K}
+         , {<<"position">>, V}
+         ] | Acc]
+    end, [], Stations).
 
 station_info(ID, _Stations, _Source) ->
     HTML = win1251_to_utf8(request_station_info(ID)),
