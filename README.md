@@ -1,4 +1,4 @@
-### transee backend
+### transee backend [![Build Status](https://img.shields.io/travis/transee-in/backend.svg)](https://travis-ci.org/transee-in/backend)
 
 ---
 
