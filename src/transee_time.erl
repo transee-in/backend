@@ -2,4 +2,4 @@
 -export([now/0]).
 
 now() ->
-    erlang:now().
+    os:timestamp().
