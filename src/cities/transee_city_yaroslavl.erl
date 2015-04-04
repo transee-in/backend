@@ -112,14 +112,57 @@ stations(Source) ->
          ] | Acc]
     end, [], Stations).
 
-station_info(ID, _Stations, _Source) ->
+station_info(ID, _Stations, Source) ->
     HTML = win1251_to_utf8(request_station_info(ID)),
-    [Name | Transports] = binary:split(HTML, <<"<br>">>, [global]),
+    [Name | RawTransports] = binary:split(HTML, <<"<br>">>, [global]),
+    Transports = lists:map(fun(Transport) ->
+        station_info_transports(Transport, Source)
+    end, RawTransports),
     [ {<<"name">>, binary:replace(Name,
         [<<"<b>">>, <<"</b>">>, <<$">>], <<>>, [global])}
     , {<<"transports">>, Transports}
     , {<<"forecasts">>, []}
     ].
+
+% TODO memoize function by first argument
+station_info_transports(Transport, Source) ->
+    {Type, Rest1} = case Transport of
+        <<"Ав "/utf8, R/binary>> -> {<<"autobus">>, R};
+        <<"Тб "/utf8, R/binary>> -> {<<"trolleybus">>, R};
+        <<"Тм "/utf8, R/binary>> -> {<<"tram">>, R}
+    end,
+    {ok, MP} = re:compile("(?<Name>^[^.]+)\.\\s(?<From>.+)\\s\-\\s(?<To>.+)"),
+    {namelist, NL} = re:inspect(MP, namelist),
+    case re:run(Rest1, MP, [{capture, all_names, binary}]) of
+        {match, ML} ->
+            PL   = lists:zip(NL, ML),
+            Name = proplists:get_value(<<"Name">>, PL, []),
+            From = proplists:get_value(<<"From">>, PL, []),
+            To   = proplists:get_value(<<"To">>,   PL, []),
+            ID   = transport_id_by_type_and_name(Type, Name, Source),
+            io:format("ID: ~p~n", [ID]),
+            [ {<<"type">>, Type}
+            , {<<"id">>,   list_to_binary(ID)}
+            , {<<"name">>, Name}
+            , {<<"from">>, From}
+            , {<<"to">>,   To}
+            ];
+        _ ->
+            []
+    end.
+
+transport_id_by_type_and_name(Type, Name, Source) ->
+    hd(lists:foldl(fun({{RouteName, _}, Numbers}, Acc) ->
+        if
+            RouteName == Type ->
+                [{ID, _}|_] = lists:filter(fun({_TID, TName}) ->
+                    TName == Name
+                end, Numbers),
+                [ID | Acc];
+            true ->
+                Acc
+        end
+    end, [], Source)).
 
 transport_info(ID, GosID) ->
     HTML = request_info(type_id(ID), GosID),

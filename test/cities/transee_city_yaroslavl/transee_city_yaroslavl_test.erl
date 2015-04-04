@@ -58,8 +58,12 @@ test_station_info() ->
     ?mock_http_with_response(?MOD, "getstationinfo.html", fun() ->
         Source = ?open_source(?MOD),
         JSON = ?assert_json(?MOD:station_info(<<"808">>, Stations, Source)),
-        ?assertEqual(<<"Station Some Name">>, json:get(<<"/name">>, JSON)),
-        ?assertEqual(<<"Au 19k. Ul. Some - Nothin.">>, json:get(<<"/transports/0">>, JSON)),
+        ?assertEqual(<<"Остановка Площадь Волкова"/utf8>>, json:get(<<"/name">>, JSON)),
+        ?assertEqual(<<"autobus">>,              json:get(<<"/transports/2/type">>, JSON)),
+        ?assertEqual(<<"19к"/utf8>>,             json:get(<<"/transports/2/name">>, JSON)),
+        ?assertEqual(<<"19k"/utf8>>,             json:get(<<"/transports/2/id">>, JSON)),
+        ?assertEqual(<<"Ул. Гудованцева"/utf8>>, json:get(<<"/transports/2/from">>, JSON)),
+        ?assertEqual(<<"Красная пл."/utf8>>,     json:get(<<"/transports/2/to">>, JSON)),
         ?assertEqual([], json:get(<<"/forecasts">>, JSON))
     end).
 
