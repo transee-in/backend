@@ -12,44 +12,12 @@
 
 -define(json_reponse, {<<"content-type">>, <<"application/json; charset=utf-8">>}).
 
--type lat()
-   :: binary().
--type lon()
-   :: binary().
--type angle()
-   :: binary().
--type item_id()
-   :: binary().
-
--type transport_number()
-   :: binary().
--type transport_id()
-   :: binary().
--type transport_name()
-   :: string().
--type transport_type()
-   :: {transport_name(), any()}.
--type transport_list()
-   :: [{transport_type(), [{transport_id(), transport_number()}]}].
--type transport_list_with_data()
-   :: [{transport_type(), [{transport_number(), any()}]}].
--type transport_route()
-   :: {lat(), lon()}.
--type transport_station()
-   :: {lat(), lon()}.
-
 -record(worker_state,
     { city            :: atom()
-    , transports = [] :: transport_list()
-    , positions  = [] :: list(term())
-    , routes     = [] :: list(term())
-    , stations   = [] :: list(term())
-    , source          :: list()
+    , transports = [] :: []
+    , positions  = [] :: []
+    , routes     = [] :: []
+    , stations   = [] :: []
+    , source          :: []
     , info            :: any()
-    }).
-
--record(transport_position,
-    { lat   :: lat()
-    , lon   :: lon()
-    , angle :: angle()
     }).
