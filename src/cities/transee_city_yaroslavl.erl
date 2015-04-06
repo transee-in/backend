@@ -93,7 +93,7 @@ routes(Source) ->
 stations(WorkerPid, Source) ->
     WorkerPid ! {update, stations, stations(Source)}.
 stations(Source) ->
-    Stations = lists:foldl(fun({{RouteName, RouteID}, Numbers}, Acc) ->
+    Stations = lists:foldl(fun({{_RouteName, RouteID}, Numbers}, Acc) ->
         Response = request_stations(RouteID,
             transee_util:extract_transport_ids(Numbers)),
         case Response of
