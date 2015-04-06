@@ -6,7 +6,7 @@
 
 -define(PING_INTERVAL,        60 * 60 * 1000). % 1 hour
 -define(INIT_CITY_INTERVAL,   50).             % 50 ms
--define(RELOAD_CITY_INTERVAL, 30 * 1000).      % 30 seconds
+-define(RELOAD_CITY_INTERVAL, 10 * 1000).      % 30 seconds
 
 -define(to_num(N), std_cast:to_number(N)).
 
