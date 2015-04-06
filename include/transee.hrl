@@ -19,5 +19,6 @@
     , routes     = [] :: []
     , stations   = [] :: []
     , source          :: []
+    , timer           :: reference()
     , info            :: any()
     }).

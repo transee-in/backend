@@ -69,7 +69,7 @@ transport_info(City, ID, GosID) ->
 %%
 
 init([City]) ->
-    init_data_timer(), reload_data_timer(),
+    init_data_timer(),
     {ok, #worker_state{city = City}}.
 
 handle_call(coordinates, _From, #worker_state{city = City} = State) ->
@@ -104,7 +104,8 @@ handle_info(init, #worker_state{city = City} = State) ->
     spawn(City, positions,  [self(), Source]),
     spawn(City, stations,   [self(), Source]),
     spawn(City, routes,     [self(), Source]),
-    {noreply, State#worker_state{source = Source}};
+    Ref = start_data_timer(),
+    {noreply, State#worker_state{source = Source, timer = Ref}};
 handle_info({update, transports, Data}, #worker_state{} = State) ->
     {noreply, State#worker_state{transports = Data}};
 handle_info({update, positions, Data}, #worker_state{} = State) ->
@@ -113,11 +114,12 @@ handle_info({update, stations, Data}, #worker_state{} = State) ->
     {noreply, State#worker_state{stations = Data}};
 handle_info({update, routes, Data}, #worker_state{} = State) ->
     {noreply, State#worker_state{routes = Data}};
-handle_info(reload, #worker_state{city = City, source = Source} = State) ->
+handle_info(reload, #worker_state{city = City, source = Source, timer = OldRef} = State) ->
+    close_data_timer(OldRef),
     lager:info("Reload data for: ~p", [City]),
-    reload_data_timer(),
     spawn(City, positions, [self(), Source]),
-    {noreply, State};
+    Ref = start_data_timer(),
+    {noreply, State#worker_state{timer = Ref}};
 handle_info(Info, State) ->
     {reply, Info, State}.
 
@@ -134,8 +136,11 @@ code_change(_OldVsn, State, _Extra) ->
 init_data_timer() ->
     erlang:send_after(?INIT_CITY_INTERVAL, self(), init).
 
-reload_data_timer() ->
+start_data_timer() ->
     erlang:send_after(?RELOAD_CITY_INTERVAL, self(), reload).
+
+close_data_timer(Ref) ->
+    erlang:cancel_timer(Ref).
 
 open_source(City) ->
     File = atom_to_list(City) ++ ".config",
