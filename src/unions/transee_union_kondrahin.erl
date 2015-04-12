@@ -91,17 +91,22 @@ routes(City, URL, Source) ->
 
 stations(City, URL, _Source) ->
     Resp = request(URL, [{city, City}]),
-    lists:map(fun(#{<<"id">> := ID, <<"lat">> := Lat, <<"lng">> := Lng}) ->
-        [ {<<"id">>, ?to_bin(ID)}
+    lists:map(fun(#{<<"id">> := ID, <<"lat">> := Lat, <<"lng">> := Lng, <<"name">> := Name}) ->
+        BinID = ?to_bin(ID),
+        std_cache:set(<<"st_id_", City/binary, BinID/binary>>, fun() ->
+            Name
+        end),
+        [ {<<"id">>, BinID}
         , {<<"position">>, format_lat_lon(Lat, Lng)}
         ]
     end, Resp).
 
-% TODO add station name to the response
 station_info(City, URL, ID, _Stations, Source, TZ) ->
     Types = proplists:get_value(types, Source),
     Transports = proplists:get_value(transports, Source),
     Resp = request(URL, [{city, City}, {sid, ID}, {type, 0}]),
+    BinID = ?to_bin(ID),
+    StationName = std_cache:get(<<"st_id_", City/binary, BinID/binary>>),
     Forecasts = lists:map(fun(#{<<"arrt">> := Arrival, <<"rid">> := RID, <<"rtype">> := Type}) ->
         {TIDs, _Type, Name} = find_by_id(RID, Transports),
         TypeName = proplists:get_value(Type, Types),
@@ -111,12 +116,11 @@ station_info(City, URL, ID, _Stations, Source, TZ) ->
         , {<<"name">>, Name}
         ]
     end, Resp),
-    [ {<<"name">>, <<>>}
+    [ {<<"name">>, StationName}
     , {<<"transports">>, []}
     , {<<"forecasts">>, Forecasts}
     ].
 
-% http://bus125.ru/php/getVehicleForecasts.php?vid=919&type=0&city=vladivostok
 transport_info(City, URL, GosID, TZ) ->
     Resp = request(URL, [{city, City}, {vid, GosID}, {type, 0}]),
     lists:map(fun(#{<<"arrt">> := Arrival, <<"stname">> := Station}) ->

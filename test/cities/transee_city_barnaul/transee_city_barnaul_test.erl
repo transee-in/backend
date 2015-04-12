@@ -12,7 +12,7 @@ transee_city_barnaul_test_() -> {setup,
     , fun test_transport_info/0
     ]}.
 
-start() -> qdate:start(), ?mock_time({1427, 283065, 18809}).
+start() -> std:start(), qdate:start(), ?mock_time({1427, 283065, 18809}).
 stop(_) -> ?unmock_time.
 
 %%
@@ -57,7 +57,7 @@ test_station_info() ->
     ?mock_http_with_response(?MOD, "getStationForecasts.json", fun() ->
         Source = ?open_source(?MOD),
         JSON = ?assert_json(?MOD:station_info(<<"181">>, Stations, Source)),
-        ?assertEqual(<<>>, json:get(<<"/name">>, JSON)),
+        ?assertEqual(<<"Дача БМК"/utf8>>, json:get(<<"/name">>, JSON)),
         ?assertEqual([], json:get(<<"/transports">>, JSON)),
         ?assertEqual(<<"autobus">>, json:get(<<"/forecasts/0/type">>, JSON)),
         ?assertEqual(<<"111-0,112-0">>, json:get(<<"/forecasts/0/id">>, JSON)),
