@@ -9,7 +9,7 @@ request(Method, URL, Headers, Timeout) ->
     Options = [{body_format, binary}],
     case httpc:request(Method, {URL, Headers}, HttpOptions, Options) of
         {ok, {_Status, _Headers, Body}} ->
-            lager:info("transee_http ok ~s ~s ~p", [Method, URL, Body]),
+            lager:info("transee_http ok ~s ~s~n ~s~n", [Method, URL, Body]),
             {ok, Body};
         {error, timeout} ->
             lager:error("transee_http timeout ~s ~s", [Method, URL]),
