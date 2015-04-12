@@ -175,9 +175,10 @@ request(URL, Params) ->
     parse_json(transee_http:request(get, FullURL, [])).
 
 parse_json({ok, Body}) ->
-    json:from_binary(Body);
+    try
+        json:from_binary(Body)
+    catch E:R ->
+        fink:stacktrace(E, R)
+    end;
 parse_json(_) ->
     undefined.
-
-
-

@@ -9,6 +9,7 @@ start(_StartType, _StartArgs) ->
         , [ {ip, IP}, {port, Port} ]
         , [ {env, [{dispatch, routes()}]} ]
         ),
+    fink:add_lager_backend(),
     lager:info("Server started at http://~s:~p", [format_ip(IP), Port]),
     transee_sup:start_link().
 
