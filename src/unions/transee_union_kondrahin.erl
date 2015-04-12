@@ -176,7 +176,7 @@ request(URL, Params) ->
 
 parse_json({ok, Body}) ->
     try
-        jsx:decode(Body, [return_maps])
+        json:from_binary(Body)
     catch E:R ->
         lager:error("transee_union_kondrahin:parse_json ~p ~p", [E, R])
     end;
