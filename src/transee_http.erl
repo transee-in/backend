@@ -11,9 +11,9 @@ request(Method, URL, Headers, Timeout) ->
         {ok, {_Status, _Headers, Body}} ->
             {ok, Body};
         {error, timeout} ->
-            lager:error("transee_http timeout ~s ~s", [Method, URL]),
+            lager:error("transee_http:request timeout ~s ~s", [Method, URL]),
             request(Method, URL, Headers, 20000);
         Error ->
-            lager:error("transee_http error ~s ~s ~p", [Method, URL, Error]),
+            lager:error("transee_http:request error ~s ~s ~p", [Method, URL, Error]),
             undefined
     end.

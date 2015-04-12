@@ -176,9 +176,9 @@ request(URL, Params) ->
 
 parse_json({ok, Body}) ->
     try
-        json:from_binary(Body)
+        jsx:decode(Body, [return_maps])
     catch E:R ->
-        fink:stacktrace(E, R)
+        lager:error("transee_union_kondrahin:parse_json ~p ~p", [E, R])
     end;
 parse_json(_) ->
     undefined.
