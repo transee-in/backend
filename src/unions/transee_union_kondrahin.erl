@@ -178,7 +178,7 @@ parse_json({ok, Body}) ->
     try
         json:from_binary(Body)
     catch E:R ->
-        lager:error("transee_union_kondrahin:parse_json ~p ~p", [E, R])
+        lager:error("transee_union_kondrahin:parse_json ~p ~p ~s", [E, R, Body])
     end;
 parse_json(_) ->
     undefined.
