@@ -3,8 +3,10 @@
   , {vsn, git}
   , {registered, []}
   , {applications,
-    [ kernel, stdlib, std
-    , inets, lager, cowboy, qdate
+    [ kernel, stdlib, inets, std
+    , sasl, lager, cowboy, jsx, qsp
+    , json, mochiweb, mochiweb_xpath
+    , qdate, erlang_localtime, erlware_commons % qdate deps
     ]}
   , {mod, {transee_app, []}}
   , {env, []}
