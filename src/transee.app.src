@@ -5,7 +5,6 @@
   , {applications,
     [ kernel, stdlib, std
     , inets, lager, cowboy, qdate
-    , fink
     ]}
   , {mod, {transee_app, []}}
   , {env, []}
