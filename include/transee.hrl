@@ -4,7 +4,7 @@
     {Name, {Module, start_link, Args}, permanent, 5000, Type, [Module]}).
 -define(dbg(V), io:format("~20s: ~p~n", [??V, V])).
 
--define(PING_INTERVAL,        60 * 60 * 1000). % 1 hour
+-define(PING_INTERVAL,        10 * 60 * 1000). % 10 minutes
 -define(INIT_CITY_INTERVAL,   50).             % 50 ms
 -define(RELOAD_CITY_INTERVAL, 10 * 1000).      % 30 seconds
 
