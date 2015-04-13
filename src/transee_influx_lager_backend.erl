@@ -49,4 +49,4 @@ code_change(_OldVsn, State, _Extra) ->
 %%
 
 log(Level, #state{db = DB, name = Name}) ->
-    influx:post(transee, DB, [{Name, error}]).
+    influx:post(DB, Name, [{Name, error}]).
