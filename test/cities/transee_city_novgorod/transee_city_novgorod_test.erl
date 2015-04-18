@@ -30,7 +30,7 @@ test_positions() ->
     ?mock_http_with_response(?MOD, "getVehiclesMarkers.json", fun() ->
         Source = ?open_source(?MOD),
         JSON = ?assert_json(?MOD:positions(Source)),
-        ?assertEqual(<<"861785002400459">>, json:get(<<"/0/items/0/items/0/gos_id">>, JSON))
+        ?assertEqual(<<"33067164">>, json:get(<<"/0/items/0/items/0/gos_id">>, JSON))
     end).
 
 test_routes() ->

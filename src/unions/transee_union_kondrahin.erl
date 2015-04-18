@@ -45,20 +45,30 @@ positions(City, URL, Source) ->
                 catch _:_ ->
                     []
                 end,
-                json:add([Type, RID], [Item | OldItems], Acc)
+                try
+                    json:add([Type, RID], [Item | OldItems], Acc)
+                catch
+                    _:_ -> Acc
+                after
+                    Acc
+                end
             end,
             maps:to_list(lists:foldl(Fn, TypesMapped, Positions));
         _ -> []
     end,
     lists:map(fun({InternalName, Numbers}) ->
         TypeName = proplists:get_value(InternalName, Types),
-        TypeItems = lists:map(fun({NumberID, Items}) ->
-            {TIDs, _Type, Name} = find_by_id(NumberID, Transports),
-            [ {<<"id">>, ?to_bin(format_ids(TIDs))}
-            , {<<"name">>, Name}
-            , {<<"items">>, Items}
-            ]
-        end, maps:to_list(Numbers)),
+        TypeItems = lists:foldr(fun({NumberID, Items}, Acc) ->
+            case find_by_id(NumberID, Transports) of
+                {TIDs, _Type, Name} ->
+                    [[ {<<"id">>, ?to_bin(format_ids(TIDs))}
+                     , {<<"name">>, Name}
+                     , {<<"items">>, Items}
+                     ] | Acc];
+                _ ->
+                    Acc
+            end
+        end, [], maps:to_list(Numbers)),
         [ {<<"type">>, TypeName}
         , {<<"items">>, TypeItems}
         ]
