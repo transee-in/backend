@@ -50,59 +50,102 @@ format_transport_item(ID, Name) ->
     , {<<"name">>, ?to_bin(Name)}
     ].
 
-%% @doc ...
-%%
+%% @doc fetch, parse and organize transport positions
+%% in JSON format like:
+%% [
+%%   {
+%%     "type": "autobus",
+%%     "items": [
+%%       {
+%%         "id": "3",
+%%         "name": "3",
+%%         "items": [
+%%           {
+%%             "gos_id": "532",
+%%             "angle": 303,
+%%             "position": [
+%%               57.610682,
+%%               39.830793
+%%             ]
+%%           },
+%%           {
+%%             "gos_id": "510",
+%%             "angle": 359,
+%%             "position": [
+%%               57.628638,
+%%               39.848412
+%%             ]
+%%           },
+%%           ...
+%%         ]
+%%       },
+%%       ...
+%%     ]
+%%   },
+%%   ...
+%% ]
 positions(City, URL, Source) ->
-    Types = proplists:get_value(types, Source),
-    TypesMapped = create_map_with_types(Types),
+    Types = create_map_with_types(Source),
     Transports = proplists:get_value(transports, Source),
-    IDs = collect_transport_ids(Transports),
-    RIDs = format_ids_for_url(IDs),
+    RIDs = collect_and_format_transport_ids(Transports),
     Data = request(URL,
         [ {rids, RIDs}, {lat0, 0}, {lng0, 0}
         , {lat1, 90}, {lng1, 180}, {curk, 0}
         , {city, City}, {info, "0123"}]),
-    RawItems = case Data of
-        #{<<"anims">> := Positions} ->
-            Fn = fun(#{<<"dir">> := Angle, <<"lat">> := Lat, <<"lon">> := Lon
-                      , <<"rid">> := ID, <<"rtype">> := Type, <<"id">> := GosID}, Acc) ->
-                Item = [ {<<"gos_id">>, GosID}, {<<"angle">>, Angle}
-                       , {<<"position">>, format_lat_lon(Lat, Lon)}],
-                RID = ?to_bin(ID),
-                OldItems = try
-                    json:get([Type, RID], Acc)
-                catch _:_ ->
-                    []
-                end,
-                try
-                    json:add([Type, RID], [Item | OldItems], Acc)
-                catch
-                    _:_ -> Acc
-                after
-                    Acc
-                end
-            end,
-            maps:to_list(lists:foldl(Fn, TypesMapped, Positions));
-        _ -> []
-    end,
+    RawItems = process_positions_data(Data, Types),
+    format_position_items(RawItems, Types, Transports).
+
+create_map_with_types(Source) ->
+    maps:from_list(lists:map(fun({ID, _Name}) ->
+        {ID, #{}}
+    end, proplists:get_value(types, Source))).
+
+collect_and_format_transport_ids(Transports) ->
+    string:join(lists:map(fun({IDs, _Type, _Name}) ->
+        format_ids(IDs)
+    end, Transports), ",").
+
+process_positions_data(#{<<"anims">> := Positions}, Types) ->
+    maps:to_list(lists:foldl(fun process_positions_data_types/2, Types, Positions));
+process_positions_data(_, _) ->
+    [].
+
+process_positions_data_types(#{<<"rid">> := ID, <<"rtype">> := Type} = Raw, JSON) ->
+    Path = [Type, ?to_bin(ID)],
+    Item = preformat_positions_data_item(Raw),
+    json:add(Path, [Item | transee_json:maybe(Path, JSON)], JSON).
+
+preformat_positions_data_item(#{<<"id">> := GosID, <<"dir">> := Angle, <<"lat">> := Lat, <<"lon">> := Lon}) ->
+    [ {<<"gos_id">>,   GosID}
+    , {<<"angle">>,    Angle}
+    , {<<"position">>, format_lat_lon(Lat, Lon)}
+    ].
+
+format_position_items(RawItems, Types, Transports) ->
     lists:map(fun({InternalName, Numbers}) ->
-        TypeName = proplists:get_value(InternalName, Types),
-        TypeItems = lists:foldr(fun({NumberID, Items}, Acc) ->
-            case find_by_id(NumberID, Transports) of
-                {TIDs, _Type, Name} ->
-                    [[ {<<"id">>, ?to_bin(format_ids(TIDs))}
-                     , {<<"name">>, Name}
-                     , {<<"items">>, Items}
-                     ] | Acc];
-                _ ->
-                    Acc
-            end
-        end, [], maps:to_list(Numbers)),
-        [ {<<"type">>, TypeName}
-        , {<<"items">>, TypeItems}
+        [ {<<"type">>,  maps:get(InternalName, Types)}
+        , {<<"items">>, collect_type_items(Numbers, Transports)}
         ]
     end, RawItems).
 
+collect_type_items(Numbers, Transports) ->
+    lists:foldr(fun({NumberID, Items}, Acc) ->
+        append_if_found_type(find_by_id(NumberID, Transports), Items, Acc)
+    end, [], maps:to_list(Numbers)).
+
+append_if_found_type({TIDs, _Type, Name}, Items, Acc) ->
+    [format_position_type_item(TIDs, Name, Items) | Acc];
+append_if_found_type(_, _, Acc) ->
+    Acc.
+
+format_position_type_item(TIDs, Name, Items) ->
+    [ {<<"id">>,    ?to_bin(format_ids(TIDs))}
+    , {<<"name">>,  Name}
+    , {<<"items">>, Items}
+    ].
+
+%% @doc
+%%
 routes(City, URL, Source) ->
     Types = proplists:get_value(types, Source),
     Transports = proplists:get_value(transports, Source),
@@ -192,19 +235,6 @@ find_by_id(ID, Transports) ->
         [Transport|_] -> Transport;
         _             -> []
     end.
-
-create_map_with_types(Types) ->
-    maps:from_list(lists:map(fun({Type, _Name}) ->
-        {Type, #{}}
-    end, Types)).
-
-collect_transport_ids(Transports) ->
-    lists:map(fun({IDs, _Type, _Name}) ->
-        IDs
-    end, Transports).
-
-format_ids_for_url(IDs) ->
-    string:join(lists:map(fun format_ids/1, IDs), ",").
 
 request(URL, Params) ->
     QS = cow_qs:qs(lists:map(fun({K, V}) ->
