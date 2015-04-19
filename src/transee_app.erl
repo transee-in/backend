@@ -18,7 +18,8 @@ stop(_State) ->
 routes() -> cowboy_router:compile([{'_', routes_v1()}]).
 
 routes_v1() ->
-    [ {"/api/v1/cities", transee_api_cities_handler, []}
+    [ {"/api", transee_api_handler, []}
+    , {"/api/v1/cities", transee_api_cities_handler, []}
     , {"/api/v1/cities/:city/[:method]", transee_api_city_handler, []}
     ].
 
