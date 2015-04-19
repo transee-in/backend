@@ -7,6 +7,7 @@
     , sasl, lager, cowboy, jsx, qsp
     , json, mochiweb, mochiweb_xpath
     , qdate, erlang_localtime, erlware_commons % qdate deps
+    , raven
     ]}
   , {mod, {transee_app, []}}
   , {env, []}
