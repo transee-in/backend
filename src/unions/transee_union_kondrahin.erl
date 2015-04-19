@@ -1,28 +1,57 @@
 %% Contains generic functions to prepare data for many cities that
 %% works on system developed by individual entrepreneur Kondrahin A.V.
 -module(transee_union_kondrahin).
+-include("transee.hrl").
 -export([transports/1, positions/3, routes/3, stations/3, transport_info/4, station_info/6]).
--define(to_bin(V), std_cast:to_binary(V)).
 
+%% @doc prepare list of transports from city source file
+%% to this json format, but in Erlang:
+%% [
+%%   {
+%%     "type": "autobus",
+%%     "items": [
+%%       {
+%%         "id": "2",
+%%         "name": "2"
+%%       },
+%%       {
+%%         "id": "2k",
+%%         "name": "2к"
+%%       },
+%%       ...
+%%     ]
+%%   },
+%%   ...
+%% ]
 transports(Source) ->
     Types = proplists:get_value(types, Source),
     Transports = proplists:get_value(transports, Source),
-    lists:map(fun({Type, TypeName}) ->
-        Items = lists:foldr(fun({ID, TType, Name}, Acc) ->
-            if
-                Type == TType ->
-                    [[ {<<"id">>, ?to_bin(format_ids(ID))}
-                     , {<<"name">>, ?to_bin(Name)}
-                     ] | Acc];
-                true ->
-                    Acc
-            end
-        end, [], Transports),
-        [ {<<"type">>, TypeName}
-        , {<<"items">>, Items}
-        ]
+    lists:map(fun(Type) ->
+        format_transport_type(Type, Transports)
     end, Types).
 
+format_transport_type({Type, TypeName}, Transports) ->
+    [ {<<"type">>,  TypeName}
+    , {<<"items">>, collect_transport_items_for(Type, Transports)}
+    ].
+
+collect_transport_items_for(Type, Transports) ->
+    lists:foldr(fun(Transport, Acc) ->
+        append_if_match_type(Type, Transport, Acc)
+    end, [], Transports).
+
+append_if_match_type(MatchType, {ID, Type, Name}, Acc) when MatchType == Type ->
+    [format_transport_item(ID, Name) | Acc];
+append_if_match_type(_, _, Acc) ->
+    Acc.
+
+format_transport_item(ID, Name) ->
+    [ {<<"id">>,   ?to_bin(format_ids(ID))}
+    , {<<"name">>, ?to_bin(Name)}
+    ].
+
+%% @doc ...
+%%
 positions(City, URL, Source) ->
     Types = proplists:get_value(types, Source),
     TypesMapped = create_map_with_types(Types),
