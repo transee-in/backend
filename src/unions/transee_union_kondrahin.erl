@@ -243,6 +243,8 @@ request(URL, Params) ->
     FullURL = lists:flatten(io_lib:format("~s?~s", [URL, QS])),
     parse_json(transee_http:request(get, FullURL, [])).
 
+parse_json({ok, <<>>}) ->
+    undefined;
 parse_json({ok, Body}) ->
     try
         json:from_binary(Body)
