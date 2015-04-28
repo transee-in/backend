@@ -1,14 +1,35 @@
-### transee backend [![Build Status](https://img.shields.io/travis/transee-in/backend.svg)](https://travis-ci.org/transee-in/backend)
+### transee backend
 
 ---
+
+[![Build Status](https://img.shields.io/travis/transee-in/backend.svg)](https://travis-ci.org/transee-in/backend)
 
 ---
 
 ### deploy
 
-```bash
-# TODO
+* Install Erlang on your server
+* Add authentication via ssh keys, `~/.ssh/config`:
+
 ```
+Host transee
+  HostName 127.0.0.1
+  User transee
+  IdentityFile ~/.ssh/id_rsa
+```
+
+* Clone this repo into `~/apps/transee`
+* Exec
+
+```bash
+# for the first deploy on server
+$ make get-deps compile release start-release
+
+# for other deploys exec this on your local machine from app root
+$ make deploy
+```
+
+* Setup nginx to listen `127.0.0.1:8000`
 
 ---
 
