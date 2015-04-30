@@ -144,33 +144,66 @@ format_position_type_item(TIDs, Name, Items) ->
     , {<<"items">>, Items}
     ].
 
-%% @doc
+%% @doc fetch, parse and organize list of routes
 %%
+%% [
+%%   {
+%%     "type": "autobus",
+%%     "items": [
+%%       {
+%%         "id": "2",
+%%         "route": [
+%%           [57.642743, 39.873551]
+%%           [57.642502, 39.873647]
+%%         ]
+%%       },
+%%       ...
+%%     ]
+%%   },
+%%   ...
+%% ]
 routes(City, URL, Source) ->
     Types = proplists:get_value(types, Source),
     Transports = proplists:get_value(transports, Source),
     lists:map(fun({Type, TypeName}) ->
-        TypeItems = lists:foldl(fun({IDs, TType, _Name}, Acc) ->
-            if
-                Type == TType ->
-                    TransportRoutes = lists:foldl(fun(ID, Acc2) ->
-                        Resp = request(URL, [{city, City}, {type, 0}, {rid, ID}]),
-                        Acc2 ++ lists:map(fun(#{<<"lat">> := Lat, <<"lng">> := Lng}) ->
-                            format_lat_lon(Lat, Lng)
-                        end, Resp)
-                    end, [], IDs),
-                    [[ {<<"id">>, ?to_bin(format_ids(IDs))}
-                     , {<<"route">>, TransportRoutes}
-                     ] | Acc];
-                true ->
-                    Acc
-            end
-        end, [], Transports),
         [ {<<"type">>, TypeName}
-        , {<<"items">>, TypeItems}
+        , {<<"items">>, format_route_items(Transports, Type, City, URL)}
         ]
     end, Types).
 
+format_route_items(Transports, Type, City, URL) ->
+    lists:foldl(fun({IDs, TType, _Name}, Acc) ->
+        if
+            Type == TType ->
+                [[ {<<"id">>, ?to_bin(format_ids(IDs))}
+                 , {<<"route">>, format_route_transports(IDs, City, URL)}
+                 ] | Acc];
+            true ->
+                Acc
+        end
+    end, [], Transports).
+
+format_route_transports(IDs, City, URL) ->
+    lists:foldl(fun(ID, Acc2) ->
+        Acc2 ++ format_route_lat_lon(request(URL, [{city, City}, {type, 0}, {rid, ID}]))
+    end, [], IDs).
+
+format_route_lat_lon(Resp) ->
+    lists:map(fun(#{<<"lat">> := Lat, <<"lng">> := Lng}) ->
+        format_lat_lon(Lat, Lng)
+    end, Resp).
+
+%% @doc fetch, parse and organize list of stations
+%%
+%% [
+%%   {
+%%     "id": "999",
+%%     "position": [
+%%       57.589139, 39.846764
+%%     ]
+%%   },
+%%   ...
+%% ]
 stations(City, URL, _Source) ->
     Resp = request(URL, [{city, City}]),
     lists:map(fun(#{<<"id">> := ID, <<"lat">> := Lat, <<"lng">> := Lng, <<"name">> := Name}) ->
