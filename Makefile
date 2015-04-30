@@ -35,5 +35,8 @@ release:
 restart-release:
 	@_rel/$(APP)/bin/$(APP) restart
 
+start-release:
+	@_rel/$(APP)/bin/$(APP) start
+
 dev:
 	@erl -pa deps/**/ebin ebin -config config/sys.config -s $(APP)
