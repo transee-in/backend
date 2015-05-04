@@ -284,7 +284,7 @@ get_station_name(City, BinID) ->
 transport_info(City, URL, GosID, TZ) ->
     Resp = request(URL, [{city, City}, {vid, GosID}, {type, 0}]),
     lists:map(fun(#{<<"arrt">> := Arrival, <<"stname">> := Station}) ->
-        [ {<<"station">>, Station}
+        [ {<<"station">>, remove_quotes(Station)}
         , {<<"time">>, format_arrival(Arrival, TZ)}
         ]
     end, Resp).
@@ -292,6 +292,9 @@ transport_info(City, URL, GosID, TZ) ->
 %%
 %% Helpers
 %%
+
+remove_quotes(Str) ->
+    binary:replace(Str, [<<$">>], <<>>, [global]).
 
 format_arrival(Arrived, TZ) ->
     Date = qdate:add_seconds(Arrived + TZ, transee_time:now()),
