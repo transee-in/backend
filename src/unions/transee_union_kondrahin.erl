@@ -86,6 +86,7 @@ format_transport_item(ID, Name) ->
 %% ]
 positions(City, URL, Source) ->
     Types = create_map_with_types(Source),
+    TypeNames = proplists:get_value(types, Source),
     Transports = proplists:get_value(transports, Source),
     RIDs = collect_and_format_transport_ids(Transports),
     Data = request(URL,
@@ -93,7 +94,7 @@ positions(City, URL, Source) ->
         , {lat1, 90}, {lng1, 180}, {curk, 0}
         , {city, City}, {info, "0123"}]),
     RawItems = process_positions_data(Data, Types),
-    format_position_items(RawItems, Types, Transports).
+    format_position_items(RawItems, TypeNames, Transports).
 
 create_map_with_types(Source) ->
     maps:from_list(lists:map(fun({ID, _Name}) ->
@@ -123,7 +124,7 @@ preformat_positions_data_item(#{<<"id">> := GosID, <<"dir">> := Angle, <<"lat">>
 
 format_position_items(RawItems, Types, Transports) ->
     lists:map(fun({InternalName, Numbers}) ->
-        [ {<<"type">>,  maps:get(InternalName, Types)}
+        [ {<<"type">>,  proplists:get_value(InternalName, Types)}
         , {<<"items">>, collect_type_items(Numbers, Transports)}
         ]
     end, RawItems).
