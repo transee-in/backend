@@ -222,13 +222,44 @@ store_station_name(City, BinID, Name) ->
         Name
     end).
 
+
+%% @doc fetch station info for every request and format it
+%%
+%% {
+%%   "name": "Остановка Улица Красноперевальская",
+%%   "transports": [
+%%     {
+%%       "type": "autobus",
+%%       "id": "6",
+%%       "name": "6",
+%%       "from": "ЯШЗ",
+%%       "to": "НЗКИ"
+%%     },
+%%     ...
+%%   ],
+%%   "forecasts": [
+%%     {
+%%       "type": "autobus",
+%%       "arrived_after": "14:37",
+%%       "id": "111-0,112-0",
+%%       "name": "55"
+%%     },
+%%     ...
+%%   ]
+%% }
 station_info(City, URL, ID, _Stations, Source, TZ) ->
     Types = proplists:get_value(types, Source),
     Transports = proplists:get_value(transports, Source),
     Resp = request(URL, [{city, City}, {sid, ID}, {type, 0}]),
     BinID = ?to_bin(ID),
-    StationName = std_cache:get(<<"st_id_", City/binary, BinID/binary>>),
-    Forecasts = lists:map(fun(#{<<"arrt">> := Arrival, <<"rid">> := RID, <<"rtype">> := Type}) ->
+    StationName = get_station_name(City, BinID),
+    [ {<<"name">>, StationName}
+    , {<<"transports">>, []}
+    , {<<"forecasts">>, format_station_forecasts(Resp, Transports, Types, TZ)}
+    ].
+
+format_station_forecasts(Resp, Transports, Types, TZ) ->
+    lists:map(fun(#{<<"arrt">> := Arrival, <<"rid">> := RID, <<"rtype">> := Type}) ->
         {TIDs, _Type, Name} = find_by_id(RID, Transports),
         TypeName = proplists:get_value(Type, Types),
         [ {<<"type">>, TypeName}
@@ -236,11 +267,10 @@ station_info(City, URL, ID, _Stations, Source, TZ) ->
         , {<<"id">>, ?to_bin(format_ids(TIDs))}
         , {<<"name">>, Name}
         ]
-    end, Resp),
-    [ {<<"name">>, StationName}
-    , {<<"transports">>, []}
-    , {<<"forecasts">>, Forecasts}
-    ].
+    end, Resp).
+
+get_station_name(City, BinID) ->
+    std_cache:get(<<"st_id_", City/binary, BinID/binary>>).
 
 transport_info(City, URL, GosID, TZ) ->
     Resp = request(URL, [{city, City}, {vid, GosID}, {type, 0}]),
