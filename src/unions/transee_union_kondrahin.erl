@@ -208,13 +208,19 @@ stations(City, URL, _Source) ->
     Resp = request(URL, [{city, City}]),
     lists:map(fun(#{<<"id">> := ID, <<"lat">> := Lat, <<"lng">> := Lng, <<"name">> := Name}) ->
         BinID = ?to_bin(ID),
-        std_cache:set(<<"st_id_", City/binary, BinID/binary>>, fun() ->
-            Name
-        end),
-        [ {<<"id">>, BinID}
-        , {<<"position">>, format_lat_lon(Lat, Lng)}
-        ]
+        store_station_name(City, BinID, Name),
+        format_stations(BinID, Lat, Lng)
     end, Resp).
+
+format_stations(ID, Lat, Lng) ->
+    [ {<<"id">>, ID}
+    , {<<"position">>, format_lat_lon(Lat, Lng)}
+    ].
+
+store_station_name(City, BinID, Name) ->
+    std_cache:set(<<"st_id_", City/binary, BinID/binary>>, fun() ->
+        Name
+    end).
 
 station_info(City, URL, ID, _Stations, Source, TZ) ->
     Types = proplists:get_value(types, Source),
