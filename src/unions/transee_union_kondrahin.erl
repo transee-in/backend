@@ -272,6 +272,15 @@ format_station_forecasts(Resp, Transports, Types, TZ) ->
 get_station_name(City, BinID) ->
     std_cache:get(<<"st_id_", City/binary, BinID/binary>>).
 
+%% @doc fetch transport info for every request and format it
+%%
+%% [
+%%   {
+%%     "station": "Комсомольская площадь",
+%%     "time": "11:42"
+%%   },
+%%   ...
+%% ]
 transport_info(City, URL, GosID, TZ) ->
     Resp = request(URL, [{city, City}, {vid, GosID}, {type, 0}]),
     lists:map(fun(#{<<"arrt">> := Arrival, <<"stname">> := Station}) ->
