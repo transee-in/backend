@@ -33,7 +33,8 @@ release:
 	@$(RELX) release
 
 restart-release:
-	@_rel/$(APP)/bin/$(APP) restart
+	# @_rel/$(APP)/bin/$(APP) restart
+	@sudo sv restart transee
 
 start-release:
 	@_rel/$(APP)/bin/$(APP) start
