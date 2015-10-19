@@ -226,6 +226,7 @@ request_info(ID, GosID) ->
 type_id(<<"autobus">>) -> <<"1">>;
 type_id(<<"trolleybus">>) -> <<"2">>;
 type_id(<<"tram">>) -> <<"3">>;
+type_id(<<"minibus_taxi">>) -> <<"4">>;
 type_id(_) -> undefined.
 
 win1251_to_utf8(V) ->
