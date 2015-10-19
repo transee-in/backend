@@ -129,7 +129,8 @@ station_info_transports(Transport, Source) ->
     {Type, Rest1} = case Transport of
         <<"Ав "/utf8, R/binary>> -> {<<"autobus">>, R};
         <<"Тб "/utf8, R/binary>> -> {<<"trolleybus">>, R};
-        <<"Тм "/utf8, R/binary>> -> {<<"tram">>, R}
+        <<"Тм "/utf8, R/binary>> -> {<<"tram">>, R};
+        <<"Мт "/utf8, R/binary>> -> {<<"minibus_taxi">>, R}
     end,
     {ok, MP} = re:compile("(?<Name>^[^.]+)\.\\s(?<From>.+)\\s\-\\s(?<To>.+)"),
     {namelist, NL} = re:inspect(MP, namelist),
